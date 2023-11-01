@@ -1,0 +1,658 @@
+---
+title: "Project - Churn"
+author: "Smit Pancholi, Abhradeep Das, Gouri Dumale, Swathi KR"
+# date: "today"
+date: "`r Sys.Date()`" 
+output:
+  html_document:
+    code_folding: hide
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(warning = F, results = "hide", message = F)
+
+options(scientific=T, digits = 3) 
+```
+
+```{r importing_dataset}
+getwd()
+churn_data <- data.frame(read.csv("credit_card_churn.csv"))
+churn_data
+churn_datadf <- read.csv("credit_card_churn.csv")
+churn_datadf
+
+```
+# Dimensions
+```{r Dimensions, results='markup'}
+dim(churn_data)
+```
+There are 10127 rows and 21 columns.
+
+# Summary of the churn data
+```{r Summary, results='markup'}
+str(churn_data)
+```
+This is the structure of the dataset. 
+
+Observation:
+Here, Attrition_flag is the dependent variable. 
+Gender, Education level, marital status, income category, card category are datatype object, so they would be categorical variables.
+
+Now let us remove the last two columns since they are unnecessary.
+
+```{r Removing 2 Columns, results='markup'}
+churn_data<- subset(churn_data, select = -c(Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_1, Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_2))
+
+
+```
+Removed 2 unnecessary columns.
+
+Displaying the updated data.
+```{r Top 6 Rows, results='markup'}
+head(churn_data)
+```
+# Missing Values
+Now, checking for the missing values.
+```{r Missing Values, results='markup'}
+missing_values <- colSums(is.na(churn_data))
+missing_values
+
+```
+There is no missing values in the dataset.
+
+# Descriptive Statistics
+```{r Descriptive Statistics, results='markup'}
+numerical_data <- churn_data[, c("CLIENTNUM", "Customer_Age", "Dependent_count", "Months_on_book", "Total_Relationship_Count", "Months_Inactive_12_mon", "Contacts_Count_12_mon", "Credit_Limit", "Total_Revolving_Bal", "Avg_Open_To_Buy", "Total_Amt_Chng_Q4_Q1", "Total_Trans_Amt", "Total_Trans_Ct", "Total_Ct_Chng_Q4_Q1", "Avg_Utilization_Ratio")]
+
+numerical_data_summary <- summary(numerical_data)
+numerical_data_summary
+
+```
+
+## Summary of Numerical Columns
+
+- **CLIENTNUM**
+    - The minimum CLIENTNUM in the dataset is 7.08e+08.
+    - The 1st quartile CLIENTNUM is 7.13e+08.
+    - The median CLIENTNUM is 7.18e+08.
+    - The mean CLIENTNUM is 7.39e+08.
+    - The 3rd quartile CLIENTNUM is 7.73e+08.
+    - The maximum CLIENTNUM in the dataset is 8.28e+08.
+
+- **Customer_Age**
+    - The youngest customer in the dataset is 26 years old.
+    - The 1st quartile for customer age is 41.0.
+    - The median customer age is 46.0.
+    - The mean customer age is 46.3.
+    - The 3rd quartile for customer age is 52.0.
+    - The oldest customer in the dataset is 73 years old.
+
+- **Dependent_count**
+    - The minimum number of dependents is 0.
+    - The 1st quartile for the number of dependents is 1.00.
+    - The median number of dependents is 2.00.
+    - The mean number of dependents is 2.35.
+    - The 3rd quartile for the number of dependents is 3.00.
+    - The maximum number of dependents is 5.
+
+- **Months_on_book**
+    - The minimum number of months a customer has been on the book is 13.
+    - The 1st quartile for months on the book is 31.0.
+    - The median months on the book is 36.0.
+    - The mean months on the book is 35.9.
+    - The 3rd quartile for months on the book is 40.0.
+    - The maximum number of months a customer has been on the book is 56.
+    
+- **Total_Relationship_Count**
+    - The minimum total relationship count is 1.
+    - The 1st quartile for the total relationship count is 3.00.
+    - The median total relationship count is 4.00.
+    - The mean total relationship count is 3.81.
+    - The 3rd quartile for the total relationship count is 5.00.
+    - The maximum total relationship count is 6.
+
+- **Months_Inactive_12_mon**
+    - The minimum number of months inactive in the last 12 months is 0.
+    - The 1st quartile for months inactive in the last 12 months is 2.00.
+    - The median months inactive in the last 12 months is 2.00.
+    - The mean months inactive in the last 12 months is 2.34.
+    - The 3rd quartile for months inactive in the last 12 months is 3.00.
+    - The maximum months inactive in the last 12 months is 6.
+
+- **Contacts_Count_12_mon**
+    - The minimum number of contacts in the last 12 months is 0.
+    - The 1st quartile for the number of contacts in the last 12 months is 2.00.
+    - The median number of contacts in the last 12 months is 2.00.
+    - The mean number of contacts in the last 12 months is 2.46.
+    - The 3rd quartile for the number of contacts in the last 12 months is 3.00.
+    - The maximum number of contacts in the last 12 months is 6.
+
+- **Credit_Limit**
+    - The minimum credit limit is 1438.
+    - The 1st quartile for credit limit is 2555.
+    - The median credit limit is 4549.
+    - The mean credit limit is 8632.
+    - The 3rd quartile for credit limit is 11068.
+    - The maximum credit limit is 34516.
+
+- **Total_Revolving_Bal**
+    - The minimum total revolving balance is 0.
+    - The 1st quartile for total revolving balance is 359.
+    - The median total revolving balance is 1276.
+    - The mean total revolving balance is 1163.
+    - The 3rd quartile for total revolving balance is 1784.
+    - The maximum total revolving balance is 2517.
+
+- **Avg_Open_To_Buy**
+    - The minimum available credit (avg open to buy) is 3.
+    - The 1st quartile for available credit is 1324.
+    - The median available credit is 3474.
+    - The mean available credit is 7469.
+    - The 3rd quartile for available credit is 9859.
+    - The maximum available credit is 34516.
+  
+- **Total_Amt_Chng_Q4_Q1**
+    - The minimum total amount change (Q4-Q1) is 0.00.
+    - The 1st quartile for total amount change (Q4-Q1) is 0.63.
+    - The median total amount change (Q4-Q1) is 0.74.
+    - The mean total amount change (Q4-Q1) is 0.76.
+    - The 3rd quartile for total amount change (Q4-Q1) is 0.86.
+    - The maximum total amount change (Q4-Q1) is 3.40.
+
+- **Total_Trans_Amt**
+    - The minimum total transaction amount is 510.
+    - The 1st quartile for total transaction amount is 2156.
+    - The median total transaction amount is 3899.
+    - The mean total transaction amount is 4404.
+    - The 3rd quartile for total transaction amount is 4741.
+    - The maximum total transaction amount is 18484.
+
+- **Total_Trans_Ct**
+    - The minimum total transaction count is 10.0.
+    - The 1st quartile for total transaction count is 45.0.
+    - The median total transaction count is 67.0.
+    - The mean total transaction count is 64.9.
+
+- **Total_Ct_Chng_Q4_Q1**
+    - The minimum total count change (Q4-Q1) is 0.00.
+    - The 1st quartile for total count change (Q4-Q1) is 0.58.
+    - The median total count change (Q4-Q1) is 0.70.
+    - The mean total count change (Q4-Q1) is 0.71.
+    - The 3rd quartile for total count change (Q4-Q1) is 0.82.
+    - The maximum total count change (Q4-Q1) is 3.71.
+
+- **Avg_Utilization_Ratio**
+    - The minimum average utilization ratio is 0.000.
+    - The 1st quartile for average utilization ratio is 0.023.
+    - The median average utilization ratio is 0.176.
+    - The mean average utilization ratio is 0.275.
+    - The 3rd quartile for average utilization ratio is 0.503.
+    - The maximum average utilization ratio is 0.999.
+
+
+# Standard Deviation
+
+```{r Standard Deviation, results='markup'}
+
+std_deviations <- sapply(churn_data[, c("Customer_Age", "Credit_Limit", "Total_Trans_Amt", "Avg_Open_To_Buy", "Months_on_book", "Avg_Utilization_Ratio", "Total_Revolving_Bal", "Total_Trans_Ct")], sd)
+std_deviations
+
+
+```
+
+# Exploratory Data Analysis
+## Finding the proportion of Attrition Flag in the dataset.
+
+```{r Proportion, results='markup'}
+library(ggplot2)
+attrition = churn_data$Attrition_Flag
+ggplot(data = churn_data, aes(x = attrition, fill = attrition)) + geom_bar()
+```
+
+## EDA for the categorical variables.
+
+```{r EDA Categorical Variables, results='markup'}
+library(dplyr)
+library(ggplot2)
+
+categorical_vars <- c("Attrition_Flag", "Gender", "Education_Level", "Marital_Status", "Income_Category", "Card_Category")
+
+# Function to create and return a plot
+create_plot <- function(var) {
+  ggplot(churn_data, aes(x = .data[[var]], fill = .data[[var]])) + 
+    geom_bar() +
+    geom_text(stat = 'count', aes(label = ..count..), vjust = -0.5) +
+    labs(title = paste("Distribution of", var), x = var, y = "Count") +
+    scale_fill_brewer(palette = "Set2") + 
+    theme_minimal() +  
+    theme(legend.position = "none")
+}
+
+# Create and store plots in a list
+plots_list <- lapply(categorical_vars, create_plot)
+
+# Printing each plot
+for (i in 1:length(categorical_vars)) 
+  {
+  print(plots_list[[i]])
+  }
+
+
+
+
+```
+
+# Histogram with Density Curve
+```{r Histogram, results="markup"}
+library(ggplot2)
+
+# Creating a list of column names and corresponding bin widths
+column_binwidths <- list(
+  "Customer_Age" = 3,
+  "Total_Trans_Amt" = 500,
+  "Total_Trans_Ct" = 7,
+  "Credit_Limit" = 800
+)
+
+# Creating a function to generate histograms with density curves
+generate_hist_density <- function(column, binwidth) {
+  ggplot(churn_data, aes(x = .data[[column]])) +
+    geom_histogram(binwidth = binwidth, fill = "#F36061", color = "white", aes(y = ..density..)) +
+    geom_density(alpha = 1, color = "black") +
+    labs(title = paste("Histogram with Density Curve of", column)) +
+    theme_minimal()
+}
+
+# Looping through the columns and create histograms with respective bin widths and density curves
+for (col_name in names(column_binwidths)) {
+  binwidth <- column_binwidths[[col_name]]
+  hist_density_plot <- generate_hist_density(col_name, binwidth)
+  print(hist_density_plot)
+}
+```
+
+# Hypotheses for Categorical Variables.
+- **Chi-squared test for Gender and Churn**
+
+    Null Hypothesis (H0): Gender and Churn are independent.
+    
+    Alternative Hypothesis (H1): Gender and Churn are not independent.
+
+- **Chi-squared test for Marital Status and Churn**
+
+    Null Hypothesis (H0): Marital Status and Churn are independent.
+    
+    Alternative Hypothesis (H1): Marital Status and Churn are not independent.
+
+- **Chi-squared test for Education Level and Churn**
+
+    Null Hypothesis (H0): Education level and Churn are independent.
+    
+    Alternative Hypothesis (H1): Education level and Churn are not interdependent.
+
+- **Analysis of Variance (ANOVA) test for Age and Churn**
+
+    Null Hypothesis (H0): The means of Age for churned and non-churned customers are equal.
+    
+    Alternative Hypothesis (H1): The means of Age for churned and non-churned customers are not equal.
+
+```{r Gender and Churn, results='markup'}
+# Loading necessary libraries
+library(dplyr)
+library(stats)
+
+# # Calculating the chi-squared statistic and p-value for gender and churn
+print("Chi-squared test for Gender and Churn:")
+churn_data$Gender <- as.factor(churn_data$Gender) # Converting categorical variable Gender to factor.
+gender_churn <- chisq.test(churn_data$Gender, churn_data$Attrition_Flag)
+print(gender_churn)
+```
+
+## Chi-squared test for Gender and Churn Interpretation:
+    
+    Results: The X-squared (chi-squared) value is 14, with 1 degree of freedom, and the p-value is 2e-04 (0.0002).
+    The small p-value (0.0002) indicated a statistically significant association between Gender and Churn. Therefore, we will reject Null Hypothesis(H0).
+
+```{r Marital Status and Churn, results='markup'}
+# Calculating the chi-squared statistic and p-value for marital status and churn
+churn_data$Marital_Status <- as.factor(churn_data$Marital_Status) # Converting categorical variable Marital Status to factor.
+marital_churn <- chisq.test(churn_data$Marital_Status, churn_data$Attrition_Flag)
+print("Chi-squared test for Marital Status and Churn:")
+print(marital_churn)
+```
+
+## Chi-squared test for Marital Status and Churn Interpretation:
+   
+    Results: The X-squared value is 6, with 3 degrees of freedom, and the p-value is 0.1.
+    The relatively high p-value (0.01) suggests that there is insufficient evidence to conclude that Marital Status is associated with Churn. Therefore, we will accept Null Hypothesis(H0)
+
+```{r Education level and Churn, results='markup'}
+# Calculating the chi-squared statistic and p-value for education level and churn
+print("Chi-squared test for Education Level and Churn:")
+churn_data$Education_Level <- as.factor(churn_data$Education_Level) # Converting categorical variable Education Level to factor.
+education_churn <- chisq.test(churn_data$Education_Level, churn_data$Attrition_Flag)
+print(education_churn)
+```
+
+## Chi-squared test for Education Level and Churn Interpretation:
+    
+    Results: The X-squared value is 13, with 6 degrees of freedom, and the p-value is 0.05.
+    The p-value (0.05) is close to the significance threshold. This suggests that there is weak evidence to indicate an association between Education Level and Churn. So, we will reject Null Hypothesis(H0).
+
+```{r ANOVA for Age and Churn, results='markup'}
+# Analysis of Variance (ANOVA) for age and churn
+print("Analysis of Variance (ANOVA) for Age and Churn:")
+age_churn <- aov(churn_data$Customer_Age ~ churn_data$Attrition_Flag)
+print(summary(age_churn))
+```
+
+## ANOVA for Age and Churn Interpretation: 
+    
+    Result: The F-value is 3.36, and the p-value is 0.067.
+    There is no statistically significant difference in Age between churned and non-churned customers. Therefore, we will accept the Null Hypothesis(H0).
+
+# Correlation Analysis
+```{r Correlation Analysis, results='markup'}
+library(corrplot)
+# Select numerical variables
+numerical_var <- names(churn_data)[sapply(churn_data, is.numeric)]
+
+
+# Calculate the correlation matrix for numerical variables
+correlation_matrix <- cor(churn_data[, numerical_var])
+
+# Define color palette for the correlation plot
+color_palette <- colorRampPalette(c("darkblue", "turquoise", "green"))(100)
+
+# Create a correlation plot with custom colors
+corrplot(correlation_matrix, method = "color", type = "upper", tl.col = "black", tl.srt = 90, order = "hclust", 
+         col = color_palette, addCoef.col = "black", number.cex = 0.5)
+
+```
+
+
+```{r Finding Pairs, results='markup'}
+cor_matrix <- cor(churn_data[, numerical_var])
+
+# Find highly correlated pairs
+threshold <- 0.6  # Set your desired correlation threshold
+
+# Create an empty matrix to store the results
+related_pairs <- matrix(nrow = 0, ncol = 2)
+
+# Loop through the correlation matrix to find related pairs
+for (i in 1:(length(numerical_var) - 1)) {
+  for (j in (i + 1):length(numerical_var)) {
+    if (abs(cor_matrix[i, j]) >= threshold) {
+      related_pairs <- rbind(related_pairs, c(numerical_var[i], numerical_var[j]))
+    }
+  }
+}
+
+# Displaying related variable pairs
+print(related_pairs)
+```
+```{r Displaying Correlation, results='markup'}
+var_pairs <- list(
+  c("Customer_Age", "Months_on_book"),
+  c("Credit_Limit", "Avg_Open_To_Buy"),
+  c("Total_Revolving_Bal","Avg_Utilization_Ratio"),
+  c("Total_Trans_Amt", "Total_Trans_Ct")
+)
+
+# Function to calculate and display correlation
+calc_and_display_corr <- function(pair) {
+  var1 <- pair[1]
+  var2 <- pair[2]
+  
+  # Extract data for the pair
+  data_pair <- churn_data[, c(var1, var2)]
+  
+  # Calculate correlation
+  corr_coefficient <- cor(data_pair[[var1]], data_pair[[var2]])
+  
+  # Print the correlation result
+  cat("Correlation between", var1, "and", var2, "is", corr_coefficient, "\n")
+}
+
+# Loop through variable pairs and calculate/display correlations
+for (pair in var_pairs) {
+  calc_and_display_corr(pair)
+}
+```
+Correlation Analysis:
+
+
+-**The high positive correlation of 0.789 indicates that there is a strong linear relationship between a customer's age and the number of months they have been associated with the bank.**
+
+-**The extremely high positive correlation of 0.996 suggests an almost perfect linear relationship between a customer's credit limit and their available open-to-buy credit.**
+
+-**The moderate positive correlation of 0.624 indicates that there is a significant, but not extremely strong, relationship between the total revolving balance on a credit card and the average utilization ratio.** 
+
+-**The high positive correlation of 0.807 suggests a strong linear relationship between the total transaction amount and the total transaction count.**
+
+
+Now, creating scatter plots with regression lines for a pair of related variables.
+
+```{r Scatter Plots, results='markup'}
+library(viridis)  # Load the viridis color palette
+
+related_pairs <- list(
+  list("Customer_Age", "Months_on_book", "Customer Age vs. Months on Book"),
+  list("Credit_Limit", "Avg_Open_To_Buy", "Credit Limit vs. Avg Open To Buy"),
+  list("Total_Revolving_Bal", "Avg_Utilization_Ratio", "Total Revolving Balance vs. Avg Utilization Ratio"),
+  list("Total_Trans_Amt", "Total_Trans_Ct", "Total Transaction Amount vs. Total Transaction Count")
+)
+
+# Defining a color palette
+color_palette <- inferno(7)  
+
+# Creating a function to plot scatter plots with regression lines for a pair of related variables
+plot_scatter_with_regression <- function(pair, color) {
+  var1 <- pair[[1]]
+  var2 <- pair[[2]]
+  title <- pair[[3]]  
+  
+  # Create a scatter plot
+  scatter_plot <- ggplot(churn_data, aes(x = .data[[var1]], y = .data[[var2]])) +
+    geom_point(alpha = 0.6, size = 3, color = color) +
+    geom_smooth(method = "lm", se = FALSE, color = "lightgreen", size = 2) +
+    labs(
+      title = title,  
+      x = var1,
+      y = var2
+    ) +
+    theme_minimal()
+  
+  # Setting the size of the plot
+  options(repr.plot.width = 6, repr.plot.height = 4)
+  
+  # Displaying the scatter plot with a regression line
+  print(scatter_plot)
+}
+
+# Looping through related variable pairs 
+for (i in 1:length(related_pairs)) {
+  pair <- related_pairs[[i]]
+  color <- color_palette[i]
+  plot_scatter_with_regression(pair, color)
+}
+
+
+```
+
+# Income Category vs Attrition Rate
+## Hypothesis for the chi-squared test:
+    
+    Null Hypothesis(H0): There is no association between income category and attrition.
+    Alternative Hypothesis(H1): There is an association between income category and attrition.
+    
+```{r Income Category vs Attrition Rate,  results="markup"}
+
+# Loading necessary libraries
+library(ggplot2)
+library(dplyr)
+
+
+# Creating a contingency table
+contingency_table_income <- table(churn_data$Income_Category, churn_data$Attrition_Flag)
+
+# Performing a chi-squared test
+Chi_squared_test_income <- chisq.test(contingency_table_income)
+
+cat("Contingency Table for Income Category and Churn:\n")
+print(contingency_table_income)
+
+cat("Chi-squared test for Income Category and Churn:\n")
+print(Chi_squared_test_income)
+
+# Calculating and printing the attrition rate for "Attrited Customer"
+Attrition_rate <- (contingency_table_income[,"Attrited Customer"]/ (contingency_table_income[,"Attrited Customer"]+contingency_table_income[,"Existing Customer"]))*100
+print(Attrition_rate)
+
+# Creating a boxplot for visual representation.
+barplot(Attrition_rate, beside = TRUE, legend.text = rownames(Attrition_rate),
+        col = c("turquoise", "brown"), main = "Income Category vs Attrition Rate",
+        xlab = "Income Category", ylab = "Attrition Rate (%)")
+
+```
+
+## Chi squared test interpretation:
+
+    The p-value associated with the chi-squared statistic is 0.03, which is less than the commonly used significance level 0f 0.05, indicating statistical significance.
+    Therefore, we reject null hypothesis.
+    
+# Logistic Regression Model 
+
+```{r Regression Model, results='markup'}
+library(dplyr)
+library(ggplot2)
+library(stats)
+
+churn_data$Avg_Utilization_Ratio <- as.numeric(churn_data$Avg_Utilization_Ratio)
+
+# Logistic regression model
+churn_data$Attrition_Flag <- ifelse(churn_data$Attrition_Flag == "Attrited Customer", 1, 0)
+
+model <- lm(Attrition_Flag ~ Avg_Utilization_Ratio, data = churn_data, family = "binomial")
+
+# Summarizing the model
+summary(model)
+
+# Model diagnostics and visualization
+
+library(pROC)
+roc_curve <- roc(churn_data$Attrition_Flag, fitted(model))
+```
+
+
+```{r Plotting the model, results='markup'}
+plot(roc_curve)
+
+# Confusion matrix and accuracy
+predicted_values <- ifelse(predict(model, type = "response") > 0.5, 1, 0)
+conf_matrix <- table(Actual = churn_data$Attrition_Flag, Predicted = predicted_values)
+accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
+conf_matrix
+accuracy
+
+```
+
+## Logistic Regression Interpretation:
+
+-**The model achieved an accuracy of 0.839 (83.9%). This means that approximately 83.9% of the total instances were correctly classified by the logistic regression model.**
+
+-**The logistic regression results suggest that the Average Utilization Ratio has a statistically significant impact on the likelihood of customer churn.**
+
+-**The negative coefficient indicates that customers who use their credit cards more frequently and have a higher utilization ratio are less likely to churn.**
+
+-**With a p-value <2e-16, the model is considered a significant improvement, meaning that Average Utilization Ratio is indeed related to the likelihood of churn.**
+   
+    
+
+# T-test
+
+    Null Hypothesis(H0): There is no significant difference in the Total Amount Change from Q4 to Q1 between existing customers and churned customers.
+    Alternative Hypothesis(H1): There is a significant difference in the Total Amount Change from Q4 to Q1 between existing customers and churned customers.
+
+```{r Total Amount Change from Q4 to Q1, results='markup'}
+# Calculate summary statistics for Total Amount Change from Q4 to Q1
+summary(churn_data$Total_Amt_Chng_Q4_Q1)
+boxplot(churn_data$Total_Amt_Chng_Q4_Q1 ~ churn_data$Attrition_Flag,
+        main = "Total Amount Change from Q4 to Q1 by Churn",
+        xlab = "Churn Status" ,
+        ylab = "Total Amount Change (Q4 to Q1)",
+        col = c("lightblue", "lightgreen"))
+
+
+ttest <- t.test(churn_data$Total_Amt_Chng_Q4_Q1 ~ churn_data$Attrition_Flag)
+ttest
+```
+## T-test Interpretation:
+
+    Based on the results of the Welch Two Sample t-test, we can conclude that there is a statistically significant difference in the Total Amount Change from Q4 to Q1 between existing customers and churned customers.
+    Therefore, we will reject the null hypothesis.
+    The outliers are noticeable in the boxplot. Now, let's remove those outliers
+
+```{r Removing Outliers, results='markup'}
+
+boxplot(churn_data$Total_Amt_Chng_Q4_Q1 ~ churn_data$Attrition_Flag,
+        main = "Total Amount Change from Q4 to Q1 by Churn",
+        xlab = "Churn Status" ,
+        ylab = "Total Amount Change (Q4 to Q1)",
+        col = c("lightblue", "lightgreen"),
+        outline = FALSE)
+```
+
+Removed outliers.
+
+
+```{r Churn Attrition, results='markup'}
+# Correlation analysis
+library(tidyr)
+library(caTools)
+
+# Calculating correlations
+correlation_matrix <- cor(churn_data[c("Credit_Limit", "Total_Trans_Amt", "Total_Trans_Ct", "Avg_Utilization_Ratio")])
+
+# Creating a correlation plot
+corrplot(correlation_matrix, method = "color", type = "upper", tl.col = "black", tl.srt = 45)
+
+
+# Building a logistic regression model
+logistic_model <- glm(Attrition_Flag ~ Credit_Limit + Total_Trans_Amt + Total_Trans_Ct + Avg_Utilization_Ratio, data = churn_data, family = "binomial")
+
+# Summary of the logistic regression model
+summary(logistic_model)
+
+# Scatter plot of Credit Limit vs. Total Transaction Amount
+my_colors <- c("Credit Limit vs. Total Transaction Amount" = "royalblue")
+
+# Create the scatter plot with custom colors
+ggplot(churn_data, aes(x = Credit_Limit, y = Total_Trans_Amt)) +
+  geom_point(color = my_colors["Credit Limit vs. Total Transaction Amount"]) +
+  labs(title = "Credit Limit vs. Total Transaction Amount", x = "Credit Limit", y = "Total Transaction Amount") +
+  theme_minimal()
+
+
+```
+
+# Interpretation:
+
+-**Credit Limit's coefficient is negative. Therefore, higher credit limits are associated with a lower likelihood of churn.**
+
+-**Since the Total_Teans_Amt is positive, higher transaction amounts are associated with a higher likelihood of churn.**
+
+-**Total_trans_ct's coefficient is negative. Therefore, more transactions are associated with a lower likelihood of churn  **
+
+-**A lower utilization ratio is associated with a lower likelihood of churn.**
+
+-**In summary, the logistic regression analysis indicates that Credit Limit, Total Transaction Amount, Total Transaction Count, and Average Utilization Ratio are significant predictors of churn. Customers with higher credit limit, lower transaction amounts, more transaction counts, and lower utilization ratios are likely to churn.**
