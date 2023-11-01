@@ -1,0 +1,599 @@
+---
+title: "Understanding and Predicting Credit Card Churn: An In-Depth Analysis of Customer Attrition in The Credit card industry"
+output:
+  html_document:
+    number_sections: false
+    toc: yes
+    toc_float: yes
+---
+<style>
+body {
+font-family: 'Times New Roman', Times, serif;
+font-size: 15px;
+text-align: justify}
+</style>
+<br>
+<h4>**Authors**: Smit Pancholi, Abhradeep Das, Gouri Dumale, Swathi KR</h4>
+<h4>**Keywords**: Customer Churn, Exploratory Data Analysis, Utilization Ratio</h4>
+<br>
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(warning = F, echo = FALSE, results = "hide", message = F)
+
+options(scientific=T, digits = 3) 
+```
+
+<h1>Abstract</h1>
+<p>Our team is committed to the "Understanding and Predicting Credit Card Churn: An In-Depth Analysis of Customer Attrition in The Credit Card Industry" project, where we are conducting an extensive investigation into the interactions between 10,127 clients and a financial institution. The dataset we have access to contains a wide range of client attributes, including age, income category, and credit card preferences. Our primary objective is to identify distinct customer segments through customer segmentation, aiming to understand how these attributes come together to define unique client groups. In our analysis, we are also focused on analyzing transaction patterns and behaviors across different income categories, which allows us to gain valuable insights into typical client practices. Additionally, we are delving into the complex relationship between a client's average utilization ratio and their credit limit, with a particular emphasis on promoting responsible credit utilization. One of the central goals of our project is to identify the key factors driving client attrition. We intend to categorize these factors based on categorical varibales such as age, credit utilization, or contact frequency. Furthermore, we are exploring the correlation between client income categories and attrition rates, with the ultimate aim of developing strategies to retain clients in lower income brackets. The "Credit Card Churn" dataset, hosted on our GitHub repository, serves as a valuable resource for this research and provides a strong foundation for a comprehensive exploration of client profiles and behaviors. We anticipate that the insights we uncover will significantly enhance the overall banking experience and prove to be instrumental for financial institutions in their mission to better serve their clients.</p>
+
+<h1>Introduction</h1>
+<p> Currently, the marketplace is marked by its constant evolution and intense competition, primarily driven by the proliferation of numerous service providers, notably in the global banking sector. A significant hurdle faced by this industry pertains to shifts in customer behavior. In all sectors, but especially in customer-centric organizations like banking, customers serve as the central foundation. Banks, responsible for handling deposits, investments, and loans, recognize the direct link between retaining long-term customers and generating profits. Consequently, it is imperative for banks to prevent customer attrition. [1-4] According to the Harvard Business Review, a 5% loss of customers can result in a substantial profit increase for companies, ranging from 25% to 85% [4,5]. Therefore, recognizing the pivotal role of customers as vital assets with significant impacts on a bank's profitability, modern banking businesses prioritize five crucial pillars: capital, liquidity, risk management, asset management, and customer management [6,7]. A focused approach to these five pillars is essential for management to optimize a bank's profitability effectively [7,8].</p>
+
+<p>Hence, customer attrition represents a significant and underlying concern for banks. Customer churn is characterized by the departure of a customer to a competing institution, resulting in financial losses.Therefore, the project's goal is to gain a deep understanding of various customer segments, their transaction behaviors across different income groups, the connection between how much credit they use and their credit limits, the reasons behind customer attrition, and methods to retain customers, particularly those in lower income brackets. The project involves a dataset comprising more than 10,000 individuals and their interactions, providing valuable insights into customer behavior and preferences. This extensive dataset includes detailed demographic information such as age, gender, education level, marital status, and income category. Additionally, it delves into credit card usage patterns, offering insights into credit limits, transaction behavior, and card categories. Beyond the surface, the dataset also explores banking relationships, including the total number of relationships and periods of inactivity. This abundant data presents a unique opportunity to uncover the intricacies of customer profiles and behaviors, forming the basis for a comprehensive analysis of factors affecting banking relationships, credit card usage patterns, and, importantly, customer attrition.</p>
+
+<p>As the project progresses, the team's dedication to meticulous data preprocessing becomes evident through careful data loading, thorough validation of data types, and effective management of null values. Furthermore, the extensive statistical analyses, encompassing t-tests, chi-squared tests, and correlation assessments, have revealed invaluable insights with the potential to reshape the financial landscape. This project is driven by the mission to answer pivotal questions and unveil relationships that could fundamentally transform the financial industry. The objective is to achieve this by harnessing the power of data and the precision of statistical analysis, with the aim of revolutionizing the banking sector, offering clients personalized services, and ensuring that financial institutions remain at the forefront of this ever-evolving industry.</p>
+
+<h1>Data and Methodology</h1>
+<p>The project, titled "Understanding and Predicting Credit Card Churn" is based on a dataset obtained from Kaggle, providing valuable insights into the financial behaviors of 10,127 clients and their interactions with a financial institution. This dataset encompasses a variety of client attributes, including age, gender, education level, marital status, and income categories. It also delves into credit card usage patterns, covering elements such as credit limits, transaction amounts, and card categories, while shedding light on banking relationships, such as the total number of relationships and periods of inactivity.
+
+To ensure data readiness, the team has diligently conducted data preprocessing tasks. These tasks involve verifying data types, handling null values, and structuring the data for subsequent analysis. In the methodology, a range of statistical techniques, including t-tests, chi-squared tests, and correlation analyses, are applied to uncover hidden patterns, correlations, and distinctions within the dataset.
+
+The research objectives revolve around customer segmentation, the analysis of transaction behaviors across different income categories, the identification of factors contributing to client attrition, understanding credit utilization patterns, and exploring the relationship between income categories and client churn. The overarching goal of this project is to generate actionable insights that can inform strategic decisions and enhance the overall banking experience.</p>
+
+```{r importing_dataset}
+getwd()
+churn_data <- data.frame(read.csv("credit_card_churn.csv"))
+churn_data
+churn_datadf <- read.csv("credit_card_churn.csv")
+churn_datadf
+
+```
+
+<h3> Summary Statistics</h3>
+
+```{r Summary, results='markup'}
+str(churn_data)
+summary(churn_data)
+
+```
+This project has effectively applied a range of data analysis methods to extract meaningful insights from the dataset, including correlation analysis, data distribution and customer attrition. The implementation of a variety of data analysis techniques in this project has yielded significant insights into client behaviors, temporal trends, relationships between variables, and geographic variations. This multifaceted approach allows for a comprehensive exploration of the dataset, thereby enhancing the understanding of banking relationships and client profiles.
+
+```{r Removing 2 Columns, results='markup'}
+churn_data<- subset(churn_data, select = -c(Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_1, Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_2))
+
+#removing 2 unnecessary columns.
+```
+```{r Missing Values, results='markup'}
+missing_values <- colSums(is.na(churn_data))
+#There is no missing values in the dataset.
+```
+
+```{r Numerical Data, results='markup'}
+numerical_data <- churn_data[, c("CLIENTNUM", "Customer_Age", "Dependent_count", "Months_on_book", "Total_Relationship_Count", "Months_Inactive_12_mon", "Contacts_Count_12_mon", "Credit_Limit", "Total_Revolving_Bal", "Avg_Open_To_Buy", "Total_Amt_Chng_Q4_Q1", "Total_Trans_Amt", "Total_Trans_Ct", "Total_Ct_Chng_Q4_Q1", "Avg_Utilization_Ratio")]
+
+numerical_data_summary <- summary(numerical_data)
+
+```
+<h3>Standard Deviation</h3>
+<p>The calculation of standard deviations for various attributes in the credit card dataset serves as a fundamental statistical analysis, offering valuable insights into data dispersion and variability. This metric is of particular significance in the financial industry as it contributes to understanding how essential attributes like "Customer_Age," "Credit_Limit," "Months_on_book," "Avg_Open_To_Buy," "Avg_Utilization_Ratio," "Total_Revolving_Bal," "Total_Trans_Amt," and "Total_Trans_Ct" are distributed. Standard deviation provides a measure of how much these variables deviate from their respective means. A higher standard deviation indicates greater data variability or dispersion, whereas a lower standard deviation suggests that values are more closely clustered around the mean. By computing and summarizing standard deviations for these attributes, financial analysts can glean insights into the levels of risk and variability associated with different aspects of customer credit profiles.</p>
+
+<p>Furthermore, standard deviations are instrumental in guiding data-driven decision-making processes within the financial sector. They help identify attributes that display significant variations, potentially highlighting areas where financial institutions should implement more targeted risk management strategies or customize their services accordingly. Additionally, standard deviations play a crucial role in portfolio management and the assessment of financial product volatility. A clear understanding of the range of key variables such as "Credit_Limit" or "Total_Trans_Amt" is vital for pricing models and evaluating customer creditworthiness. By effectively interpreting and applying the standard deviations of these attributes, financial institutions can make informed decisions to enhance their risk assessment procedures and provide better service to their customers.</p>
+```{r Standard Deviation, results='markup'}
+
+std_deviations <- sapply(churn_data[, c("Customer_Age", "Credit_Limit", "Total_Trans_Amt", "Avg_Open_To_Buy", "Months_on_book", "Avg_Utilization_Ratio", "Total_Revolving_Bal", "Total_Trans_Ct")], sd)
+std_deviations
+
+```
+
+
+<h3> Exploratory Data Analysis of Categorical Variables </h3>
+<p>EDA enables the identification of patterns, trends, and associations within categorical data. This can be vital for making informed decisions, understanding customer behavior, or recognizing significant factors that impact outcomes.</p>
+
+<p>In the "Data Distribution" section, the ggplot2 library is utilized for visualizing how categorical variables are distributed within the dataset. These visual representations play a crucial role in understanding the distribution of different attributes, including "Attrition_Flag," "Gender," "Education_Level," "Marital_Status," "Income_Category," and "Card_Category." The bar graphs offer a clear overview of the frequency of each category within these attributes. This analysis is instrumental in revealing patterns, frequencies, and variations, which are essential for comprehending customer segments and their behavior in the context of credit card usage.</p>
+
+
+```{r EDA Categorical Variables, results='markup'}
+library(dplyr)
+library(ggplot2)
+
+categorical_vars <- c("Attrition_Flag", "Gender", "Education_Level", "Marital_Status", "Income_Category", "Card_Category")
+
+# Function to create and return a plot
+create_plot <- function(var) {
+  ggplot(churn_data, aes(x = .data[[var]], fill = .data[[var]])) + 
+    geom_bar() +
+    geom_text(stat = 'count', aes(label = ..count..), vjust = -0.5) +
+    labs(title = paste("Distribution of", var), x = var, y = "Count") +
+    scale_fill_brewer(palette = "Set2") + 
+    theme_minimal() +  
+    theme(legend.position = "none")
+}
+
+# Create and store plots in a list
+plots_list <- lapply(categorical_vars, create_plot)
+
+# Printing each plot
+for (i in 1:length(categorical_vars)) 
+  {
+  print(plots_list[[i]])
+  }
+```
+
+<h3>Exploratory Data Analysis of Numerical Variables</h3>
+<p>The exploratory data analysis (EDA) conducted on the dataset primarily emphasizes its numerical variables, providing valuable insights into key financial attributes of the customers. Specifically, a detailed examination is carried out on variables such as "Customer_Age," "Total_Trans_Amt," "Total_Trans_Ct," and "Credit_Limit." Utilizing histograms and density curves, the EDA unveils significant information about the financial behaviors and characteristics of the customers.</p>
+
+<p>For instance, the "Customer_Age" histogram, using a bin width of 3, offers a comprehensive view of the age distribution among the customer base. This visualization aids in determining whether the customer population exhibits a skew toward a specific age group or displays noticeable gaps or anomalies in age distribution. Such findings can guide targeted marketing efforts and inform product development strategies.</p>
+
+<p>Transitioning to attributes related to customer transactions, the histograms for "Total_Trans_Amt" and "Total_Trans_Ct" are crucial in understanding customer spending patterns. With bin widths of 500 and 7, respectively, these visualizations reveal the distribution of total transaction amounts and counts. They play a pivotal role in identifying concentration ranges and identifying potential outliers within the transaction data. This knowledge can be instrumental in shaping strategies for customer engagement, loyalty programs, and adjustments to credit limits (with binwidths of 800). In essence, the EDA of numerical variables establishes a foundation for more advanced data analysis, empowering data scientists and business analysts to make data-informed decisions and customize financial offerings for better customer service.</p>
+
+```{r Histogram, results="markup"}
+library(ggplot2)
+
+# Creating a list of column names and corresponding bin widths
+column_binwidths <- list(
+  "Customer_Age" = 3,
+  "Total_Trans_Amt" = 500,
+  "Total_Trans_Ct" = 7,
+  "Credit_Limit" = 800
+)
+
+# Creating a function to generate histograms with density curves
+generate_hist_density <- function(column, binwidth) {
+  ggplot(churn_data, aes(x = .data[[column]])) +
+    geom_histogram(binwidth = binwidth, fill = "#F36061", color = "white", aes(y = ..density..)) +
+    geom_density(alpha = 1, color = "black") +
+    labs(title = paste("Histogram with Density Curve of", column)) +
+    theme_minimal()
+}
+
+# Looping through the columns and create histograms with respective bin widths and density curves
+for (col_name in names(column_binwidths)) {
+  binwidth <- column_binwidths[[col_name]]
+  hist_density_plot <- generate_hist_density(col_name, binwidth)
+  print(hist_density_plot)
+}
+```
+<h1>Results </h1>
+<h3><b> Analyzing the Impact of Categorical Variables on Customer Churn</b></h3>
+<h4><b>1.Chi-squared test for Gender and Churn</b>
+
+  *Null Hypothesis (H0): Gender and Churn are independent.*
+    
+  *Alternative Hypothesis (H1): Gender and Churn are not independent.*
+
+```{r Gender and Churn, results='markup'}
+# Loading necessary libraries
+library(dplyr)
+library(stats)
+
+# # Calculating the chi-squared statistic and p-value for gender and churn
+churn_data$Gender <- as.factor(churn_data$Gender) # Converting categorical variable Gender to factor.
+gender_churn <- chisq.test(churn_data$Gender, churn_data$Attrition_Flag)
+print(gender_churn)
+```
+
+<h4>Chi-squared test for Gender and Churn Interpretation:</h4>
+    
+  Results: The X-squared (chi-squared) value is 14, with 1 degree of freedom, and the p-value is 2e-04 (0.0002).
+  The small p-value (0.0002) indicated a statistically significant association between Gender and Churn. Therefore, we will reject Null Hypothesis(H0).
+  
+<h4><b>2.Chi-squared test for Marital Status and Churn</b></h4>
+
+  *Null Hypothesis (H0): Marital Status and Churn are independent.*
+    
+  *Alternative Hypothesis (H1): Marital Status and Churn are not independent.*
+  
+```{r Marital Status and Churn, results='markup'}
+# Calculating the chi-squared statistic and p-value for marital status and churn
+churn_data$Marital_Status <- as.factor(churn_data$Marital_Status) # Converting categorical variable Marital Status to factor.
+marital_churn <- chisq.test(churn_data$Marital_Status, churn_data$Attrition_Flag)
+print(marital_churn)
+```
+
+<h4>Chi-squared test for Marital Status and Churn Interpretation:</h4>
+   
+   Results: The X-squared value is 6, with 3 degrees of freedom, and the p-value is 0.1.
+   The relatively high p-value (0.01) suggests that there is insufficient evidence to conclude that Marital Status is associated with Churn. Therefore, we will accept Null Hypothesis(H0)
+
+<h4><b>3.Chi-squared test for Education Level and Churn</b></h4>
+
+  *Null Hypothesis (H0): Education level and Churn are independent.*
+    
+  *Alternative Hypothesis (H1): Education level and Churn are not interdependent.*
+
+```{r Education level and Churn, results='markup'}
+# Calculating the chi-squared statistic and p-value for education level and churn
+print("Chi-squared test for Education Level and Churn:")
+churn_data$Education_Level <- as.factor(churn_data$Education_Level) # Converting categorical variable Education Level to factor.
+education_churn <- chisq.test(churn_data$Education_Level, churn_data$Attrition_Flag)
+print(education_churn)
+```
+
+<h4>Chi-squared test for Education Level and Churn Interpretation:</h4>
+    
+  Results: The X-squared value is 13, with 6 degrees of freedom, and the p-value is 0.05.
+  The p-value (0.05) is close to the significance threshold. This suggests that there is weak evidence to indicate an association between Education Level and Churn. So, we will reject Null Hypothesis(H0).
+    
+<h4><b>4.Analysis of Variance (ANOVA) test for Age and Churn</b></h4>
+
+  *Null Hypothesis (H0): The means of Age for churned and non-churned customers are equal.*
+    
+  *Alternative Hypothesis (H1): The means of Age for churned and non-churned customers are not equal.*
+
+```{r ANOVA for Age and Churn, results='markup'}
+# Analysis of Variance (ANOVA) for age and churn
+print("Analysis of Variance (ANOVA) for Age and Churn:")
+age_churn <- aov(churn_data$Customer_Age ~ churn_data$Attrition_Flag)
+print(summary(age_churn))
+```
+
+<h4>ANOVA for Age and Churn Interpretation:</h4>
+    
+  Result: The F-value is 3.36, and the p-value is 0.067.
+  There is no statistically significant difference in Age between churned and non-churned customers. Therefore, we will accept the Null Hypothesis(H0).
+
+<p>These interpretations provide insights into the relationships between different factors and customer churn. Factors like Gender and Education Level appear to have associations with churn, while factors like Marital Status and Age do not show significant associations with churn based on the statistical tests conducted. These findings can inform strategies for customer retention and marketing efforts.</p>
+
+<br>
+<h3><b>Correlation Analysis</b></h3>
+<p>The conducted correlation analysis plays a crucial role in our understanding of how numerical variables in the credit card dataset are interconnected. This analysis uncovers the dynamics between various factors that affect customer behavior and financial outcomes, offering insights into which variables tend to move together or in opposite directions. This knowledge is invaluable for making well-informed decisions in areas such as marketing strategies, risk assessment, and product development.</p>
+
+<p>Furthermore, the analysis goes beyond basic correlation calculations by establishing a correlation threshold and systematically identifying highly correlated variable pairs. This step is vital for ensuring the robustness and efficiency of our analytical models and strategies while avoiding redundancy. Detecting and addressing these strongly correlated variable pairs helps eliminate potential biases and inaccuracies in predictive modeling, ultimately allowing us to deliver more personalized services and enhance the overall customer experience. In summary, this correlation analysis serves as a fundamental tool for optimizing decision-making processes and enhancing the quality of our financial services to customers.</p>
+```{r Correlation Analysis, results='markup'}
+library(corrplot)
+# Select numerical variables
+numerical_var <- names(churn_data)[sapply(churn_data, is.numeric)]
+
+
+# Calculate the correlation matrix for numerical variables
+correlation_matrix <- cor(churn_data[, numerical_var])
+
+# Define color palette for the correlation plot
+color_palette <- colorRampPalette(c("darkblue", "turquoise", "green"))(100)
+
+# Create a correlation plot with custom colors
+corrplot(correlation_matrix, method = "color", type = "upper", tl.col = "black", tl.srt = 90, order = "hclust", 
+         col = color_palette, addCoef.col = "black", number.cex = 0.5)
+
+```
+```{r Finding Pairs, results='markup'}
+cor_matrix <- cor(churn_data[, numerical_var])
+
+# Find highly correlated pairs
+threshold <- 0.6  # Set your desired correlation threshold
+
+# Create an empty matrix to store the results
+related_pairs <- matrix(nrow = 0, ncol = 2)
+
+# Loop through the correlation matrix to find related pairs
+for (i in 1:(length(numerical_var) - 1)) {
+  for (j in (i + 1):length(numerical_var)) {
+    if (abs(cor_matrix[i, j]) >= threshold) {
+      related_pairs <- rbind(related_pairs, c(numerical_var[i], numerical_var[j]))
+    }
+  }
+}
+
+# Displaying related variable pairs
+print(related_pairs)
+```
+```{r Displaying Correlation, results='markup'}
+var_pairs <- list(
+  c("Customer_Age", "Months_on_book"),
+  c("Credit_Limit", "Avg_Open_To_Buy"),
+  c("Total_Revolving_Bal","Avg_Utilization_Ratio"),
+  c("Total_Trans_Amt", "Total_Trans_Ct")
+)
+
+# Function to calculate and display correlation
+calc_and_display_corr <- function(pair) {
+  var1 <- pair[1]
+  var2 <- pair[2]
+  
+  # Extract data for the pair
+  data_pair <- churn_data[, c(var1, var2)]
+  
+  # Calculate correlation
+  corr_coefficient <- cor(data_pair[[var1]], data_pair[[var2]])
+  
+  # Print the correlation result
+  cat("Correlation between", var1, "and", var2, "is", corr_coefficient, "\n")
+}
+
+# Loop through variable pairs and calculate/display correlations
+for (pair in var_pairs) {
+  calc_and_display_corr(pair)
+}
+```
+<h4><b>Correlation Analysis Interpretation:</b></h4>
+
+
+The high positive correlation of 0.789 indicates that there is a strong linear relationship between a customer's age and the number of months they have been associated with the bank.
+
+The extremely high positive correlation of 0.996 suggests an almost perfect linear relationship between a customer's credit limit and their available open-to-buy credit.
+
+The moderate positive correlation of 0.624 indicates that there is a significant, but not extremely strong, relationship between the total revolving balance on a credit card and the average utilization ratio.
+
+The high positive correlation of 0.807 suggests a strong linear relationship between the total transaction amount and the total transaction count.
+
+
+Now, creating scatter plots with regression lines for a pair of related variables.
+
+```{r Scatter Plots, results='markup'}
+library(viridis)  # Load the viridis color palette
+
+related_pairs <- list(
+  list("Customer_Age", "Months_on_book", "Customer Age vs. Months on Book"),
+  list("Credit_Limit", "Avg_Open_To_Buy", "Credit Limit vs. Avg Open To Buy"),
+  list("Total_Revolving_Bal", "Avg_Utilization_Ratio", "Total Revolving Balance vs. Avg Utilization Ratio"),
+  list("Total_Trans_Amt", "Total_Trans_Ct", "Total Transaction Amount vs. Total Transaction Count")
+)
+
+# Defining a color palette
+color_palette <- inferno(7)  
+
+# Creating a function to plot scatter plots with regression lines for a pair of related variables
+plot_scatter_with_regression <- function(pair, color) {
+  var1 <- pair[[1]]
+  var2 <- pair[[2]]
+  title <- pair[[3]]  
+  
+  # Create a scatter plot
+  scatter_plot <- ggplot(churn_data, aes(x = .data[[var1]], y = .data[[var2]])) +
+    geom_point(alpha = 0.6, size = 3, color = color) +
+    geom_smooth(method = "lm", se = FALSE, color = "lightgreen", size = 2) +
+    labs(
+      title = title,  
+      x = var1,
+      y = var2
+    ) +
+    theme_minimal()
+  
+  # Setting the size of the plot
+  options(repr.plot.width = 6, repr.plot.height = 4)
+  
+  # Displaying the scatter plot with a regression line
+  print(scatter_plot)
+}
+
+# Looping through related variable pairs 
+for (i in 1:length(related_pairs)) {
+  pair <- related_pairs[[i]]
+  color <- color_palette[i]
+  plot_scatter_with_regression(pair, color)
+}
+
+```
+<p>In summary, these scatter plots and their regression lines provide valuable visualizations of the relationships between these variable pairs. They suggest that age may be a factor contributing to longer customer relationships, credit limit and available open-to-buy credit move in a very consistent manner, while the relationship between total revolving balance and average utilization ratio exhibits some variability. Additionally, more transactions often correspond to higher transaction amounts, which can be relevant for understanding customer behavior and informing business strategies.</p>
+
+
+<h3><b>Income Category vs Attrition Rate</b></h3>
+<p>The chi-squared test is commonly employed in statistical analysis to evaluate the presence of an association or relationship between two categorical variables. In the context of the analysis concerning "Income Category vs Attrition Rate," the chi-squared test was chosen to examine whether there exists a statistically significant association between income category and the attrition rate. Additionally, a contingency table was created to efficiently summarize the distribution of observations across different categories of two categorical variables, income category, and attrition rate. It serves as a foundation tool for assessing the association between these variables, hypothesis testing, and visual representation of the relationship.</p>
+<h4>Hypothesis for the chi-squared test:</h4>
+    
+  *Null Hypothesis(H0): There is no association between income category and attrition.*
+  
+  *Alternative Hypothesis(H1): There is an association between income category and attrition.*
+    
+Contingency Table for Income Category and Churn:
+```{r Income Category vs Attrition Rate,  results="markup"}
+
+# Loading necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Creating a contingency table
+contingency_table_income <- table(churn_data$Income_Category, churn_data$Attrition_Flag)
+
+print(contingency_table_income)
+```
+
+Chi-squared test for Income Category and Churn:
+
+```{r,results="markup"}
+# Performing a chi-squared test
+Chi_squared_test_income <- chisq.test(contingency_table_income)
+
+print(Chi_squared_test_income)
+
+```
+Printing the attrition rate for Attrited Customer:
+
+```{r,results="markup"}
+
+# Calculating and printing the attrition rate for "Attrited Customer"
+Attrition_rate <- (contingency_table_income[,"Attrited Customer"]/ (contingency_table_income[,"Attrited Customer"]+contingency_table_income[,"Existing Customer"]))*100
+print(Attrition_rate)
+
+```
+
+```{r, results='markup'}
+
+# Creating a boxplot for visual representation.
+barplot(Attrition_rate, beside = TRUE, legend.text = rownames(Attrition_rate),
+        col = c("turquoise", "brown"), main = "Income Category vs Attrition Rate",
+        xlab = "Income Category", ylab = "Attrition Rate (%)")
+
+```
+
+<h4>Chi-squared test interpretation:</h4>
+  
+  The p-value associated with the chi-squared statistic is 0.03, which is less than the commonly used significance level of 0.05. This indicates statistical significance, suggesting that there is a         meaningful relationship between income category and attrition rate. Therefore, we reject the null hypothesis.
+
+<br>
+<h3>Analyzing Average Utilization Ratio and Credit Card Churn</h3>
+<p>Logistic Regression is a statistical method used for analyzing a dataset in which there are one or more independent variables that determine an outcome. The outcome is measured with a dichotomous variable (in which there are only two possible outcomes). In the case of binary logistic regression, the outcome can be either 0 or 1, which represents the two classes of the dependent variable.</p>
+
+<p>therefore, Logistic Regression was chosen because it is a suitable and interpretable model for analyzing the relationship between the Average Utilization Ratio and Credit Card Churn, especially when dealing with a binary outcome and the need to understand the influence of predictor variables on the likelihood of churn.</p>
+<h4>Logistic Regression Model</h4>
+
+```{r Regression Model, results='markup'}
+library(dplyr)
+library(ggplot2)
+library(stats)
+
+churn_data$Avg_Utilization_Ratio <- as.numeric(churn_data$Avg_Utilization_Ratio)
+
+# Logistic regression model
+churn_data$Attrition_Flag <- ifelse(churn_data$Attrition_Flag == "Attrited Customer", 1, 0)
+
+model <- lm(Attrition_Flag ~ Avg_Utilization_Ratio, data = churn_data, family = "binomial")
+
+# Summarizing the model
+summary(model)
+
+# Model diagnostics and visualization
+
+library(pROC)
+roc_curve <- roc(churn_data$Attrition_Flag, fitted(model))
+```
+<h4>Logistic Regression Interpretation:</h4>
+
+
+The logistic regression results suggest that the Average Utilization Ratio has a statistically significant impact on the likelihood of customer churn.
+
+The negative coefficient indicates that customers who use their credit cards more frequently and have a higher utilization ratio are less likely to churn.
+
+With a p-value <2e-16, the model is considered a significant improvement, meaning that Average Utilization Ratio is indeed related to the likelihood of churn.
+   
+    
+
+```{r Plotting the model, results='markup'}
+plot(roc_curve)
+
+# Confusion matrix and accuracy
+predicted_values <- ifelse(predict(model, type = "response") > 0.5, 1, 0)
+conf_matrix <- table(Actual = churn_data$Attrition_Flag, Predicted = predicted_values)
+accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
+conf_matrix
+accuracy
+
+```
+<p>There are 8,500 instances where the actual class is 0 (non-churned customers), and the model correctly predicted them as 0. Moreover, there are 1,627 instances where the actual class is 0, but the model incorrectly predicted them as 1 (false positives). Overall, the model achieved an accuracy of 0.839, which translates to 83.9%. This means that approximately 83.9% of the total instances in the dataset were correctly classified by the logistic regression model.</p>
+
+ 
+<h3>Analyzing Total Amount Change from Q4 to Q1 Changed in Relation to Credit Card Churn</h3>
+<p>A t-test is a statistical hypothesis test used to determine whether there is a significant difference between the means of two groups. It is widely used for comparing the means of two groups to assess whether the observed differences between them are likely to be real or simply due to random chance. The t-test is particularly useful when dealing with small sample sizes or when the population standard deviation is unknown.</p>
+<p>Therefore, a t-test was chosen because it is a suitable statistical test for comparing the means of a continuous variable (Total Amount change) between two groups (churned and not churned) in the context of binary outcome (Credit Card Churn). It is a well-established and interpretable method for this type of analysis.</p>
+<h4>T-test</h4>
+
+  *Null Hypothesis(H0): There is no significant difference in the Total Amount Change from Q4 to Q1 between existing customers and churned customers.*
+  *Alternative Hypothesis(H1): There is a significant difference in the Total Amount Change from Q4 to Q1 between existing customers and churned customers.*
+
+```{r Total Amount Change from Q4 to Q1, results='markup'}
+# Calculate summary statistics for Total Amount Change from Q4 to Q1
+summary(churn_data$Total_Amt_Chng_Q4_Q1)
+boxplot(churn_data$Total_Amt_Chng_Q4_Q1 ~ churn_data$Attrition_Flag,
+        main = "Total Amount Change from Q4 to Q1 by Churn",
+        xlab = "Churn Status" ,
+        ylab = "Total Amount Change (Q4 to Q1)",
+        col = c("lightblue", "lightgreen"))
+
+
+ttest <- t.test(churn_data$Total_Amt_Chng_Q4_Q1 ~ churn_data$Attrition_Flag)
+ttest
+```
+<h4>T-test Interpretation:</h4>
+
+<p>The results of the Welch Two Sample t-test strongly support the rejection of the null hypothesis. They indicate that there is a highly statistically significant difference in the means of "Total_Amt_Chng_Q4_Q1" between existing customers and churned customers. The p-value is effectively zero, and the 95 percent confidence interval provides a range for the true difference in means. The sample means suggest that existing customers have a higher mean value for this variable compared to churned customers.</p>
+
+<p>In the context of the boxplot analysis, it is evident that outliers exist within the dataset. Outliers represent data points that significantly deviate from the typical values within a given dataset, often due to factors like data collection errors or extraordinary observations. Identifying the presence of outliers is a crucial aspect of data analysis because these values can exert a disproportionate influence on statistical results, potentially leading to distorted patterns or skewed means. Consequently, the decision to remove outliers from the dataset carries significant importance. The goal of outlier removal is to enhance the robustness and reliability of the statistical analysis. Outliers can introduce bias and hinder the accurate representation of underlying trends and relationships in the data. Removing them can bring the data closer to adhering to the assumptions of the statistical test, facilitating the derivation of more meaningful and actionable insights.</p>
+
+```{r Removing Outliers, results='markup'}
+
+boxplot(churn_data$Total_Amt_Chng_Q4_Q1 ~ churn_data$Attrition_Flag,
+        main = "Total Amount Change from Q4 to Q1 by Churn",
+        xlab = "Churn Status" ,
+        ylab = "Total Amount Change (Q4 to Q1)",
+        col = c("lightblue", "lightgreen"),
+        outline = FALSE)
+```
+Removed Outliers.
+
+<h3>Determining Critical Predictors of Customer Churn</h3>
+<p>Correlation analysis was chosen because it is often used to explore relationships between numerical variables. In this case, the code calculates correlations between "Credit_Limit," "Total_Trans_Amt," "Total_Trans_Ct," and "Avg_Utilization_Ratio," which are numerical variables. Also, it helps identify if there are linear relationships (positive or negative) between these numerical variables. This information is valuable for understanding how they relate to each other and whether they have an impact on the target variable, Attrition_Flag.</p>
+
+```{r Churn Attrition, results='markup'}
+# Correlation analysis
+library(tidyr)
+library(caTools)
+
+# Calculating correlations
+correlation_matrix <- cor(churn_data[c("Credit_Limit", "Total_Trans_Amt", "Total_Trans_Ct", "Avg_Utilization_Ratio")])
+
+# Creating a correlation plot
+corrplot(correlation_matrix, method = "color", type = "upper", tl.col = "black", tl.srt = 45)
+
+```
+
+<p>Additionally, Logistic Regression was used because it is a common choice when dealing with binary outcomes (in this case, "Attrition_Flag" representing churn or not churn). The model aims to predict the probability of customer churn based on the values of the predictor variables: "Credit_Limit," "Total_Trans_Amt," "Total_Trans_Ct," and "Avg_Utilization_Ratio." </p>
+
+```{r, results='markup'}
+# Building a logistic regression model
+logistic_model <- glm(Attrition_Flag ~ Credit_Limit + Total_Trans_Amt + Total_Trans_Ct + Avg_Utilization_Ratio, data = churn_data, family = "binomial")
+
+# Summary of the logistic regression model
+summary(logistic_model)
+```
+
+<p>The logistic regression model was applied to predict customer churn based on the provided predictor variables. The results indicate that higher "Credit_Limit" and a lower "Average_Utilization_Ratio" are associated with a lower likelihood of churn, as reflected by their negative coefficients. Conversely, a higher "Total_Trans_Amt" is associated with a higher likelihood of churn, as indicated by the positive coefficient. The number of "Total_Trans_Ct" also negatively impacts the likelihood of churn, implying that more total transactions are linked to a lower likelihood of churn. The significance codes reveal that these relationships are highly significant.</p>
+
+<p>A scatter plot is a type of data visualization that is used to display the relationship between two numerical variables. Therefore, the scatter plot of "Credit_Limit" vs. "Total_Trans_Amt" is used to visualize the relationship between these two numerical variables. The choice of this visualization method can help provide insights into how these two variables are related and whether they show any clear patterns or trends.</p>
+
+```{r, results='markup'}
+
+
+# Scatter plot of Credit Limit vs. Total Transaction Amount
+my_colors <- c("Credit Limit vs. Total Transaction Amount" = "royalblue")
+
+# Create the scatter plot with custom colors
+ggplot(churn_data, aes(x = Credit_Limit, y = Total_Trans_Amt)) +
+  geom_point(color = my_colors["Credit Limit vs. Total Transaction Amount"]) +
+  labs(title = "Credit Limit vs. Total Transaction Amount", x = "Credit Limit", y = "Total Transaction Amount") +
+  theme_minimal()
+
+
+```
+
+
+<h1>Conclusion</h1>
+<p>The research findings provide valuable insights into the factors influencing customer churn within the context of the analyzed credit card data. Several key observations and conclusions can be drawn from the analyses conducted. First, it is evident that demographic variables, specifically gender and education level, show statistically significant associations with customer churn. The chi-squared tests reveal that there is a meaningful relationship between gender and churn, with a small p-value indicating statistical significance. A similar pattern is observed for education level, where although the p-value is close to the significance threshold, there is weak evidence of an association with churn. These findings suggest that tailoring retention strategies and marketing efforts based on gender and education level may be beneficial in reducing churn rates. Second, variables such as marital status and age do not exhibit statistically significant associations with customer churn. The chi-squared test for marital status indicates a relatively high p-value, suggesting that there is insufficient evidence to conclude an association with churn. Likewise, the ANOVA test for age does not reveal a statistically significant difference in age between churned and non-churned customers. These results imply that customer marital status and age may not be strong predictors of churn in the analyzed dataset.</p>
+<p>The analyses also shed light on the impact of specific financial variables on customer churn. The logistic regression model highlights the significance of factors such as credit limit, total transaction amount, total transaction count, and average utilization ratio. Notably, a higher credit limit and lower average utilization ratio are associated with a reduced likelihood of churn. These financial insights can guide strategic decisions in credit card businesses, emphasizing the importance of credit limit management and transaction-related strategies to retain customers. Additionally, the t-test results for "Total_Amt_Chng_Q4_Q1" reveal a highly statistically significant difference between existing and churned customers, implying that this variable plays a crucial role in predicting customer churn. This variable measures the change in total transaction amount from Q4 to Q1, indicating that customers with a more significant change are more likely to churn. Therefore, understanding and monitoring changes in transaction amounts can be vital in identifying customers at risk of churn.</p>
+<p>Lastly, the research findings provide a multifaceted view of customer churn in the credit card industry. By considering demographic, financial, and transaction-related variables, businesses can tailor their strategies to reduce churn rates effectively. The combination of statistical analyses, including chi-squared tests, ANOVA, logistic regression, and t-tests, equips credit card companies with the insights needed to make data-informed decisions that enhance customer retention and overall business performance.</p>
+
+
+<h1>References</h1>
+
+1. Jagadeesan, A.P. (2020). Bank customer retention prediction and customer ranking based on deep neural networks. International Journal of Scientific Development Research, 5, 444–449.
+
+2. Amuda, K.A., & Adeyemo, A.B. (2019). Customer churn prediction in a financial institution using artificial neural networks. arXiv, arXiv:1912.11346.
+
+3. Kim, S., Shin, K.-S., & Park, K. (2005). An application of support vector machines for customer churn analysis: Credit card case. In Proceedings of the International Conference on Natural Computation (pp. 636–647). Springer.
+
+4. Kumar, D.A., & Ravi, V. (2008). Predicting credit card customer churn in banks using data mining. *International Journal of Data Analysis and Technology Strategies, 1*, 4–28. https://doi.org/10.1504/IJDATS.2008.02002
+
+5. Keramati, A., Ghaneei, H., & Mirmohammadi, S.M. (2016). Developing a prediction model for customer churn from electronic banking services using data mining. Financial Innovation, 2, 10. http://doi.org/10.1186/s40854-016-0029-6
+
+6. Bastan, M., Akbarpour, S., & Ahmadvand, A. (2016). Business dynamics of Iranian commercial banks. In Proceedings of the 34th International Conference of the System Dynamics Society, Delft, The Netherlands.
+
+7. Bastan, M., Bagheri Mazrae, M., Ahmadvand, A. (2016). Dynamics of banking soundness based on CAMELS Rating system. In Proceedings of the 34th International Conference of the System Dynamics Society, Delft, The Netherlands.
+
+8. Iranmanesh, S.H., Hamid, M., Bastan, M., Hamed Shakouri, G., & Nasiri, M.M. (2019). Customer churn prediction using artificial neural network: An analytical CRM application. In Proceedings of the International Conference on Industrial Engineering and Operations Management, Bangkok, Thailand (pp. 23–26).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
