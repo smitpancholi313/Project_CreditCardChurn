@@ -1,0 +1,405 @@
+---
+title: "Understanding and Predicting Credit Card Churn: An In-Depth Analysis of Customer Attrition in The Credit card industry"
+output:
+  html_document:
+    number_sections: false
+    toc: yes
+    toc_float: yes
+---
+<style>
+body {
+font-family: 'Times New Roman', Times, serif;
+font-size: 15px;
+text-align: justify}
+</style>
+<br>
+<h4>**Authors**: Smit Pancholi, Gouri Dumale, Swathi KR, Abhradeep Das</h4>
+<h4>**Keywords**: Customer Churn, Exploratory Data Analysis, Utilization Ratio</h4>
+<br>
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(warning = F, echo = FALSE, results = "hide", message = F)
+options(scientific=T, digits = 3) 
+
+```
+
+```{r packages}
+library(plyr)
+library(corrplot)
+library(ggplot2)
+library(gridExtra)
+library(caret)
+library(MASS)
+library(randomForest)
+library(party)
+library(rpart)
+library(GoodmanKruskal)
+library(rpart.plot)
+```
+
+```{r}
+Credit_card_churn <- read.csv('credit_card_churn.csv')
+str(Credit_card_churn)
+```
+
+```{r}
+sapply(Credit_card_churn, function(x) sum(is.na(x)))
+
+Credit_card_churn$Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_1  <- NULL
+Credit_card_churn$Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_2 <- NULL
+Credit_card_churn$CLIENTNUM <- NULL
+
+```
+
+```{r}
+str(Credit_card_churn)
+summary(Credit_card_churn)
+```
+
+```{r}
+print(head(Credit_card_churn,10))
+```
+
+
+
+```{r}
+table(Credit_card_churn$Attrition_Flag, Credit_card_churn$Customer_Age)
+table(Credit_card_churn$Attrition_Flag, Credit_card_churn$Gender)
+
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(Credit_card_churn, aes(x = Attrition_Flag,
+                              y = prop.table(stat(count)),
+                              fill = factor(Gender),
+                              label = scales::percent(prop.table(stat(count))))) +
+  geom_bar(position = position_dodge()) +
+  geom_text(stat = "count",
+            position = position_dodge(.9),
+            vjust = -0.5, size = 3) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Attrition by Gender",
+       x = "Attrition status",
+       y = "Count") +
+  theme_classic() +
+  scale_fill_manual(values = c("#ff99cc", "#99ccff")) +  
+  scale_x_discrete(labels = c("Existing Customer", "Attrited Customer"))  
+
+```
+```{r}
+library(ggplot2)
+
+ggplot(Credit_card_churn, aes(x = Attrition_Flag,
+                              y = prop.table(stat(count)),
+                              fill = factor(Card_Category),
+                              label = scales::percent(prop.table(stat(count))))) +
+  geom_bar(position = position_dodge()) +
+  geom_text(stat = "count",
+            position = position_dodge(.9),
+            vjust = -0.5, size = 3) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Attrition by Card Category",
+       x = "Attrition status",
+       y = "Count") +
+  theme_classic() +
+  scale_fill_brewer(palette = "Set2") +  # Change colors here using a new color palette
+  scale_x_discrete(labels = c("Existing Customer", "Attrited Customer"))  # Define x-axis labels
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(Credit_card_churn, aes(x = Attrition_Flag,
+                              y = prop.table(stat(count)),
+                              fill = factor(Income_Category),
+                              label = scales::percent(prop.table(stat(count))))) +
+  geom_bar(position = position_dodge()) +
+  geom_text(stat = "count",
+            position = position_dodge(.9),
+            vjust = -0.5, size = 3) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Attrition by Income Category",
+       x = "Attrition status",
+       y = "Count") +
+  theme_classic() +
+  scale_fill_brewer(palette = "Paired") +  # Change colors here using a new color palette
+  scale_x_discrete(labels = c("Existing Customer", "Attrited Customer"))  # Define x-axis labels
+```
+
+```{r}
+# Violin plot for 'Total_Trans_Ct' by 'Card_Category'
+
+ggplot(Credit_card_churn, aes(x = Card_Category, y = Total_Trans_Ct, fill = Card_Category)) +
+  geom_violin(trim = FALSE) +
+  labs(title = "Total Transaction Count by Card Category", x = "Card Category", y = "Total Transaction Count") +
+  scale_fill_brewer(palette = "Set3")  # Change colors here using a new color palette
+
+```
+
+```{r}
+
+library(GGally)
+numerical_cols <- c("Customer_Age", "Months_on_book", "Credit_Limit", "Total_Trans_Amt")
+data_numeric <- Credit_card_churn[numerical_cols]
+
+ggpairs(data_numeric)
+```
+
+```{r}
+ggplot(Credit_card_churn, aes(x = Avg_Utilization_Ratio, fill = Income_Category)) +
+  geom_density(alpha = 0.6) +
+  labs(title = "Density Plot of Average Utilization Ratio by Income Category", x = "Average Utilization Ratio", y = "Density") +
+  facet_wrap(~Income_Category, scales = "free")
+
+
+
+```
+
+
+```{r}
+numerical_cols <- c("Customer_Age", "Months_on_book", "Credit_Limit", "Total_Trans_Amt")
+data_numeric <- Credit_card_churn[numerical_cols]
+
+correlation_matrix <- cor(data_numeric)
+library(ggplot2)
+```
+
+```{r}                                               
+correlation_matrix <- cor(data_numeric)
+
+# Load required libraries
+library(reshape2)
+library(ggplot2)
+
+# Reshape the correlation matrix for visualization
+melted_correlation <- reshape2::melt(correlation_matrix)
+
+# Create correlation heatmap
+ggplot(data = melted_correlation, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Correlation Heatmap of Numeric Variables", x = "", y = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+```{r}
+#Converting all features to categorical data
+Credit_card_churn[sapply(Credit_card_churn, is.character)]<-
+lapply(Credit_card_churn[sapply(Credit_card_churn, is.character)], as.factor)
+```
+
+```{r}
+str(Credit_card_churn)
+summary(Credit_card_churn)
+```
+
+
+```{r}
+# Assuming you have loaded the necessary data as 'Credit_card_churn'
+
+# Convert all features to categorical data
+Credit_card_churn[sapply(Credit_card_churn, is.character)] <- lapply(Credit_card_churn[sapply(Credit_card_churn, is.character)], as.factor)
+
+# Set seed for reproducibility
+set.seed(186)
+
+# Create indices for splitting
+indices <- sample(1:nrow(Credit_card_churn), 0.8 * nrow(Credit_card_churn))
+
+# Split the dataset into training and testing sets
+training_reg <- Credit_card_churn[indices, ]
+testing_reg <- Credit_card_churn[-indices, ]
+
+# Display dimensions of training and testing sets
+dim(training_reg)
+dim(testing_reg)
+
+```
+
+
+
+```{r}
+# Load necessary libraries
+library(randomForest)
+library(caret)
+
+# Train the Random Forest model
+set.seed(186)  # Set seed for reproducibility
+random_forest <- randomForest(Attrition_Flag ~ ., ntree = 500, data = training_reg)
+
+# Print summary of the random forest model
+print(summary(random_forest))
+print(random_forest)
+
+# Make predictions on the testing set
+rf_pred <- predict(random_forest, testing_reg)
+
+# Calculate confusion matrix
+conf_matrix_rf <- confusionMatrix(rf_pred, testing_reg$Attrition_Flag)
+
+# Extract overall accuracy from confusion matrix
+ran_accuracy <- conf_matrix_rf$overall["Accuracy"]
+cat("Random Forest Accuracy:", ran_accuracy, "\n")
+
+# Print precision, recall, F1-score, TP, FP, FN, TN
+precision <- conf_matrix_rf$byClass["Precision"]
+recall <- conf_matrix_rf$byClass["Recall"]
+f1_score <- conf_matrix_rf$byClass["F1"]
+tp <- conf_matrix_rf$table[2, 2]
+fp <- conf_matrix_rf$table[1, 2]
+fn <- conf_matrix_rf$table[2, 1]
+tn <- conf_matrix_rf$table[1, 1]
+
+cat("Precision:", precision, "\n")
+cat("Recall:", recall, "\n")
+cat("F1 Score:", f1_score, "\n")
+cat("True Positives:", tp, "\n")
+cat("False Positives:", fp, "\n")
+cat("False Negatives:", fn, "\n")
+cat("True Negatives:", tn, "\n")
+
+
+```
+
+
+
+```{r}
+# Load necessary libraries
+library(pROC)
+library(caret)
+
+# Fit Logistic Regression Model
+LogModel <- glm(Attrition_Flag ~ ., family = "binomial", data = training_reg)
+print(summary(LogModel))
+anova(LogModel, test = "Chisq")
+
+# Make predictions on the testing set
+log_reg <- predict(LogModel, testing_reg[-1], type = "response")
+threshold <- 0.7  # Adjust the threshold as needed
+y_pred <- ifelse(log_reg > threshold, 2, 1)
+y_pred <- as.numeric(y_pred)
+target <- as.numeric(testing_reg$Attrition_Flag)
+
+# Confusion Matrix and Accuracy
+conf_matrix <- confusionMatrix(table(y_pred, target))
+log_accuracy <- conf_matrix$overall["Accuracy"]
+cat("Accuracy:", log_accuracy, "\n")
+
+# Print confusion matrix
+cat("Confusion Matrix:\n")
+print(conf_matrix$table)
+
+# Calculate TP, TN, FP, FN
+TP <- conf_matrix$table[2, 2]
+TN <- conf_matrix$table[1, 1]
+FP <- conf_matrix$table[1, 2]
+FN <- conf_matrix$table[2, 1]
+
+cat("\nTrue Positives (TP):", TP, "\n")
+cat("True Negatives (TN):", TN, "\n")
+cat("False Positives (FP):", FP, "\n")
+cat("False Negatives (FN):", FN, "\n")
+
+# Calculate Precision, Recall, and F1 Score
+precision <- TP / (TP + FP)
+recall <- TP / (TP + FN)
+f1_score <- 2 * (precision * recall) / (precision + recall)
+
+cat("\nPrecision:", precision, "\n")
+cat("Recall (Sensitivity):", recall, "\n")
+cat("F1 Score:", f1_score, "\n")
+
+# ROC Curve and AUC
+roc_curve <- roc(target, log_reg)
+auc_value <- auc(roc_curve)
+
+# Plot ROC Curve
+plot(roc_curve, main = "ROC Curve", col = "blue", lwd = 2)
+abline(a = 0, b = 1, lty = 2, col = "red")  # Diagonal line for reference
+
+# Display AUC value
+cat("AUC:", auc_value, "\n")
+
+# Calculate accuracy from confusion matrix
+accuracy_from_conf_matrix <- sum(diag(conf_matrix$table)) / sum(conf_matrix$table)
+cat("Accuracy (calculated from Confusion Matrix):", accuracy_from_conf_matrix, "\n")
+
+
+```
+
+
+```{r}
+
+
+# Decision Tree for Regular Data
+decision_tree <- ctree(Attrition_Flag ~ ., data = training_reg)
+print(decision_tree)
+
+# Predict using the decision tree model on the testing set
+dt_pred <- predict(decision_tree, testing_reg)
+
+# Calculate confusion matrix
+conf_matrix_dt <- confusionMatrix(dt_pred, testing_reg$Attrition_Flag)
+
+# Extracting TP, TN, FP, FN from confusion matrix
+TP <- conf_matrix_dt$table[2, 2]  # True Positives
+TN <- conf_matrix_dt$table[1, 1]  # True Negatives
+FP <- conf_matrix_dt$table[1, 2]  # False Positives
+FN <- conf_matrix_dt$table[2, 1]  # False Negatives
+
+# Print TP, TN, FP, FN
+cat("True Positives (TP):", TP, "\n")
+cat("True Negatives (TN):", TN, "\n")
+cat("False Positives (FP):", FP, "\n")
+cat("False Negatives (FN):", FN, "\n")
+
+# Calculate and print Precision, Recall, and F1 Score
+precision <- TP / (TP + FP)
+recall <- TP / (TP + FN)
+f1_score <- 2 * (precision * recall) / (precision + recall)
+
+cat("Precision:", precision, "\n")
+cat("Recall (Sensitivity):", recall, "\n")
+cat("F1 Score:", f1_score, "\n")
+
+# Calculate and print accuracy
+dec_accuracy <- sum(diag(conf_matrix_dt$table)) / sum(conf_matrix_dt$table)
+cat("Decision Tree Accuracy:", dec_accuracy, "\n")
+
+```
+
+```{r}
+# Create a data frame for comparison
+comparison_data <- data.frame(
+  Algorithm = c("Random Forest", "Decision Tree", "Logistic Regression"),
+  Percentage = c(ran_accuracy * 100, dec_accuracy * 100, accuracy_from_conf_matrix * 100)
+)
+
+# Load necessary library
+library(ggplot2)
+
+# Define pretty colors from the RColorBrewer package
+library(RColorBrewer)
+my_colors <- c("#FF6F61", "#6B5B95", "#88B04B")    # Using Set2 palette with 3 colors
+
+# Plot the comparison using ggplot with pretty colors and adjusted width
+ggplot(data = comparison_data, aes(x = Algorithm, y = Percentage, fill = Algorithm)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.6) +
+  scale_fill_manual(values = my_colors) +  # Use pretty colors
+  geom_text(aes(label = sprintf("%.2f%%", Percentage)), vjust = -0.2, size = 5, position = position_dodge(0.7)) +
+  ylim(0, max(comparison_data$Percentage) * 1.1) +
+  labs(title = "Comparison of Model Accuracy",
+       y = "Accuracy (%)",
+       x = "Algorithm")
+
+
+
+```
+
