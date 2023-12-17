@@ -1,0 +1,524 @@
+---
+title: "Understanding and Predicting Credit Card Churn: An In-Depth Analysis of Customer Attrition in The Credit Card Industry"
+output:
+  html_document:
+    number_sections: false
+    toc: yes
+    toc_float: yes
+---
+<style>
+body {
+font-family: 'Times New Roman', Times, serif;
+font-size: 15px;
+text-align: justify}
+</style>
+<br>
+<h4>**Authors**: Smit Pancholi, Gouri Dumale, Swathi KR, Abhradeep Das</h4>
+<h4>**Keywords**: Customer Churn, Logistic Regression, Random Forest, Decision Tree</h4>
+<br>
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(warning = F, echo = FALSE, results = "hide", message = F)
+options(scientific=T, digits = 3) 
+
+```
+
+```{r packages}
+library(plyr)
+library(corrplot)
+library(ggplot2)
+library(gridExtra)
+library(caret)
+library(MASS)
+library(randomForest)
+library(party)
+library(rpart)
+library(GoodmanKruskal)
+library(rpart.plot)
+```
+
+```{r}
+Credit_card_churn <- read.csv('credit_card_churn.csv')
+str(Credit_card_churn)
+```
+
+```{r}
+sapply(Credit_card_churn, function(x) sum(is.na(x)))
+
+Credit_card_churn$Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_1  <- NULL
+Credit_card_churn$Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_2 <- NULL
+Credit_card_churn$CLIENTNUM <- NULL
+
+```
+
+```{r}
+print(head(Credit_card_churn,10))
+```
+
+```{r}
+table(Credit_card_churn$Attrition_Flag, Credit_card_churn$Customer_Age)
+table(Credit_card_churn$Attrition_Flag, Credit_card_churn$Gender)
+
+```
+
+<h1>Abstract</h1>
+<p>Our team is dedicated to the project "Understanding and Predicting Credit Card Churn: A Detailed Examination of Customer Loss in the Credit Card Industry." We're deeply immersed in investigating interactions involving 10,127 clients and a financial institution, utilizing a dataset rich in diverse client attributes, such as age, income categories, and credit card preferences. Our primary goal is to decipher distinct customer segments through meticulous segmentation techniques, comprehending how these attributes converge to form specific client clusters. Concurrently, our analysis involves scrutinizing transactional patterns across various income brackets, providing valuable insights into typical client behaviors. Furthermore, we're committed to understanding the complex relationship between a client's average utilization ratio and their credit limit, emphasizing responsible credit utilization practices. Identifying key factors influencing client attrition is central to our objectives, intending to categorize these factors using variables like age, credit utilization, or contact frequency. Additionally, our exploration extends to studying the correlation between client income categories and attrition rates, focusing on devising tailored retention strategies, particularly for clients in lower income brackets. Leveraging the "Credit Card Churn" dataset hosted on GitHub, our research enables a comprehensive exploration of client profiles and behaviors. We foresee that the insights gleaned will significantly enhance the banking sector, providing essential guidance to financial institutions to better cater to their clients' needs and preferences within a framework of 10,127 interactions.</p>
+
+
+<h1>Introduction</h1>
+<p>Presently, the market undergoes continual change and fierce competition, largely fueled by the proliferation of various service providers, notably within the global banking realm. One of the primary challenges faced by this sector revolves around adapting to shifts in customer behavior. In all industries, but particularly within customer-centric sectors like banking, customers are the bedrock. Banks, entrusted with managing deposits, investments, and loans, understand the direct correlation between retaining long-term customers and bolstering profits. Hence, preventing customer attrition is a critical goal for banks [1-4]. As per the Harvard Business Review, even a 5% decrease in customers can significantly elevate company profits, with potential increases ranging between 25% and 85% [4,5]. Consequently, acknowledging customers' pivotal role as substantial assets with profound impacts on a bank’s profitability, modern banking enterprises prioritize five fundamental pillars: capital, liquidity, risk management, asset management, and customer management [6,7]. A targeted focus on these pillars is indispensable for management seeking to effectively optimize a bank’s profitability [7,8].</p>
+
+<p>Thus, the departure of customers to rival institutions, known as customer attrition or churn, poses a significant and underlying concern for banks, leading to financial losses. Therefore, the primary aim of the project is to acquire an in-depth comprehension of diverse customer segments, their transactional behaviors across varying income brackets, the correlation between their credit utilization and credit limits, the causes underlying customer attrition, and strategies to retain clients, particularly those within lower income brackets. The project revolves around a dataset encompassing over 10,000 individuals and their interactions, offering valuable insights into customer behavior and preferences. This extensive dataset contains intricate demographic details like age, gender, educational background, marital status, and income categories. Moreover, it delves into credit card usage patterns, providing insights into credit limits, transactional patterns, and card categories. Beyond the surface, this dataset delves into banking relationships, including the total relationship count and periods of inactivity. The wealth of data available presents a unique opportunity to unveil the complexities of customer profiles and behaviors, laying the groundwork for a comprehensive examination of elements impacting banking relationships, credit card usage trends, and notably, customer attrition.</p>
+
+<p>As the project advances, the team's commitment to thorough data preprocessing becomes apparent through meticulous steps such as precise data loading, comprehensive validation of data formats, and proficient handling of missing values. Moreover, the extensive use of statistical analyses, including t-tests, chi-squared tests, and correlation assessments, has uncovered invaluable insights that possess the potential to significantly impact the financial landscape. This project is motivated by the mission to address critical inquiries and unveil connections that could potentially revolutionize the financial sector. Its objective is to accomplish this by leveraging the potential of data and the accuracy of statistical analysis, aiming to transform the banking industry, provide tailored services to clients, and ensure that financial institutions remain at the forefront of this ever-evolving domain.</p>
+
+<h1>Data and Methodology</h1>
+<p>The project, titled “Understanding and Predicting Credit Card Churn,” centers around a dataset sourced from Kaggle, offering valuable insights into the financial behaviors of 10,127 clients and their engagements with a financial institution. This dataset comprises a diverse array of client attributes, including age, gender, education level, marital status, and income categories. It provides a comprehensive view of credit card usage patterns, covering aspects like credit limits, transaction amounts, card categories, and sheds light on banking relationships such as the total number of relationships and inactive periods.</p>
+
+<p>To ensure the data's readiness, the team has meticulously executed data preprocessing tasks. These tasks involve rigorous verification of data types, meticulous handling of null values, and organizing the data for subsequent analysis. Methodologically, a spectrum of statistical techniques, encompassing logistic regression, decision trees, random forest, and correlation analyses, has been applied to unveil latent patterns, correlations, and unique attributes within the dataset.</p>
+
+<p>The research objectives pivot around customer segmentation, analyzing transactional behaviors across diverse income categories, identifying key factors contributing to client attrition, comprehending credit utilization patterns, and probing the correlation between income categories and client churn. The ultimate aim of this project is to derive actionable insights capable of guiding strategic decisions and ultimately enhancing the overall banking experience.</p>
+
+<h2><i>Summary Statistics</i></h2>
+```{r results='markup'}
+str(Credit_card_churn)
+summary(Credit_card_churn)
+```
+<p> Various data analysis methods have been adeptly employed in this project to derive valuable insights from the dataset, spanning correlation analysis, examination of data distributions, and investigation into customer attrition. By utilizing a diverse set of data analysis techniques, this project has uncovered substantial insights regarding client behaviors, temporal patterns, interrelations among variables, and geographical disparities. This multifaceted strategy enables an in-depth exploration of the dataset, thereby enriching comprehension of banking connections and client characteristics.</p>
+
+<h2><i>Logistic Regression</i></h2>
+<p>Logistic regression is a statistical technique used for binary classification problems, where the target variable is categorical and has two possible outcomes. Unlike linear regression, which predicts continuous values, logistic regression models the probability that an input belongs to a particular category using the logistic or sigmoid function. This function ensures that the output is bounded between 0 and 1, representing probabilities.One of the distinguishing characteristics of logistic regression is its ability to provide probabilistic outputs, enabling not only class predictions but also an estimation of confidence in those predictions. This method establishes a linear decision boundary, making it suitable for problems where a straight line or plane can effectively separate the classes. However, logistic regression assumes a linear relationship between the independent variables and the log-odds of the dependent variable, which might limit its performance with complex, nonlinear relationships without additional feature engineering.Extensions of logistic regression include multinomial logistic regression for multiclass classification problems and regularization techniques like L1 and L2 regularization to prevent overfitting. Evaluation metrics like accuracy, precision, recall, F1-score, and ROC-AUC are commonly used to assess the model's performance.</p>
+
+<h2><i>Decision Tree</i></h2>
+<p>Decision trees are versatile and intuitive predictive modeling tools used in machine learning for both classification and regression tasks. They mimic human decision-making by creating a tree-like structure, where each internal node represents a feature, each branch represents a decision rule based on that feature, and each leaf node represents the outcome or prediction.Decision trees perform these splits using various algorithms such as ID3, C4.5, CART (Classification and Regression Trees), or others. One common metric used for determining the best split is the Gini impurity (for classification) or mean squared error (for regression), which measures the degree of impurity or uncertainty in the dataset.Decision trees offer several advantages, including their interpretability, as the resulting tree structure is easy to understand and visualize. They can handle both numerical and categorical data and implicitly perform feature selection by identifying the most informative features at the top of the tree.</p>
+
+<h2><i> Random Forest </i></h2>
+<p> Random Forest is a versatile and powerful ensemble learning method used in both classification and regression tasks within machine learning. It operates by constructing multiple decision trees during training and outputs the mode of the classes (for classification) or the mean prediction (for regression) of individual trees. The fundamental principle of Random Forest lies in creating a forest of decision trees, each of which is trained on a random subset of the training data and a random subset of the features. This randomness in the training process helps to prevent overfitting, enhance model generalization, and reduce variance, making it more robust and less sensitive to noise in the dataset.During the prediction phase, for classification tasks, the Random Forest aggregates the predictions from each individual tree and outputs the class that receives the most votes (mode). For regression tasks, it computes the mean prediction from all trees. This averaging process mitigates the tendency of individual decision trees to overfit the data and provides a more stable and accurate prediction. Random Forests offer several advantages. They are relatively easy to use, less prone to overfitting compared to individual decision trees, and can handle large datasets with high dimensionality. Moreover, they provide feature importance scores, which indicate the contribution of each feature in the model's predictive capability, aiding in feature selection and understanding the data. However, Random Forests are not immune to drawbacks. They can be computationally expensive, especially with a large number of trees or features. Additionally, while they usually offer excellent performance, they might not be the best choice for highly imbalanced datasets or datasets with strong linear relationships among features.</p>
+
+<h1> Results </h1>
+
+<p>This section presents the outcomes and findings obtained from employing various machine learning algorithms for predicting credit card churn. The primary objective of this study was to develop models capable of accurately identifying potential churners in the credit card customer base. Exploratory Data Analysis (EDA) and correlation analysis were conducted to gain insights into the dataset's characteristics and feature relationships. Additionally, three distinct machine learning models, namely Random Forest, Decision Tree, and Logistic Regression, were utilized for this predictive analysis.</p>
+
+<h2>1. Exploratory Data Analysis </h2>
+
+<div style="text-align: center;">
+```{r}
+library(ggplot2)
+
+ggplot(Credit_card_churn, aes(x = Attrition_Flag,
+                              y = prop.table(stat(count)),
+                              fill = factor(Gender),
+                              label = scales::percent(prop.table(stat(count))))) +
+  geom_bar(position = position_dodge()) +
+  geom_text(stat = "count",
+            position = position_dodge(.9),
+            vjust = -0.5, size = 3) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Attrition by Gender",
+       x = "Attrition status",
+       y = "Count") +
+  theme_classic() +
+  scale_fill_manual(values = c("#ff99cc", "#99ccff")) +  
+  scale_x_discrete(labels = c("Existing Customer", "Attrited Customer"))  
+
+```
+</div>
+<p style="display: inline-block; text-align: left; padding-left: 340px;">
+<b>Figure 1.</b></p>
+
+<p>The visualization titled "Attrition by Gender" exhibits the distribution of attrition status concerning gender within the dataset. The chart provides a comparative analysis between "Existing Customers" and "Attrited Customers" across female and male categories. In the "Existing Customer" group, the representation of female customers stands at approximately 9.2%, while male customers constitute around 6.9% of this segment. Contrarily, within the "Attrited Customer" category, the percentage distribution portrays a substantial increase. Females account for a notably higher proportion, approximately 43.7%, compared to males, which represent about 40.2%. The visualization, denoted as Figure 1, serves as a crucial visual aid in delineating the attrition status across different genders. It highlights a substantial disproportion in attrition rates, particularly emphasizing a notably higher attrition among female clients compared to males.</p>
+
+<div style="text-align: center;">
+```{r}
+library(ggplot2)
+
+ggplot(Credit_card_churn, aes(x = Attrition_Flag,
+                              y = prop.table(stat(count)),
+                              fill = factor(Card_Category),
+                              label = scales::percent(prop.table(stat(count))))) +
+  geom_bar(position = position_dodge()) +
+  geom_text(stat = "count",
+            position = position_dodge(.9),
+            vjust = -0.5, size = 3) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Attrition by Card Category",
+       x = "Attrition status",
+       y = "Count") +
+  theme_classic() +
+  scale_fill_brewer(palette = "Set2") +  # Change colors here using a new color palette
+  scale_x_discrete(labels = c("Existing Customer", "Attrited Customer"))  # Define x-axis labels
+```
+</div>
+<div style="display: inline-block; text-align: left; padding-left: 320px;">
+<b>Figure 2.</b></div>
+
+<p>Figure 2 presents a detailed comparison of attrition rates across four distinct card categories: Blue, Gold, Platinum, and Silver. The bar chart illustrates the percentages of existing and attrited customers within each card category, offering valuable insights into the relationship between card types and customer attrition. One of the most striking observations from the graph is the predominant presence of Blue cardholders among both existing and attrited customers. Existing customers holding Blue cards constitute the largest percentage at 15.000%. In contrast, the proportions of existing customers with Gold (0.207%), Platinum (0.049%), or Silver (0.810%) cards are considerably smaller, indicating a substantial prevalence of Blue card usage among the customer base. However, a noteworthy trend emerges concerning attrited customers, where an overwhelming majority also possesses Blue cards, accounting for a substantial 78.177% of the attrited customer base. Comparatively, the percentages of attrited customers with Gold (0.938%), Platinum (0.148%), or Silver (4.671%) cards are notably lower. This divergence in attrition rates across card categories is particularly pronounced, signifying a considerably higher attrition rate among Blue cardholders compared to other card types.</p> 
+
+<div style="text-align: center;">
+```{r}
+library(ggplot2)
+
+ggplot(Credit_card_churn, aes(x = Attrition_Flag,
+                              y = prop.table(stat(count)),
+                              fill = factor(Income_Category),
+                              label = scales::percent(prop.table(stat(count))))) +
+  geom_bar(position = position_dodge()) +
+  geom_text(stat = "count",
+            position = position_dodge(.9),
+            vjust = -0.5, size = 3) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Attrition by Income Category",
+       x = "Attrition status",
+       y = "Count") +
+  theme_classic() +
+  scale_fill_brewer(palette = "Paired") +  # Change colors here using a new color palette
+  scale_x_discrete(labels = c("Existing Customer", "Attrited Customer"))  # Define x-axis labels
+```
+</div>
+<div style="display: inline-block; text-align: left; padding-left: 310px;">
+<b>Figure 3.</b></div>
+
+<p>Figure 3 presents a comprehensive comparison of attrition rates across distinct income categories, shedding light on the relationship between income levels and customer churn. The bar chart delineates the percentages of both existing and attrited customers within specific income brackets, unraveling significant insights into attrition patterns based on income segmentation. Within the existing customer base, the graph illustrates notable disparities across income categories. The $40K - $60K income bracket emerges as the predominant segment, constituting the highest percentage at 6.043%. In contrast, the $120K+ category exhibits the lowest proportion of existing customers at 1.244%. This distribution suggests a concentration of existing customers in the lower to middle-income brackets, with relatively fewer customers in the higher income brackets. However, a compelling revelation arises concerning attrited customers, where a substantial proportion falls under the Less than $40K income category, accounting for a striking 29.120%. This observation suggests a significant correlation between unavailable income data and customer attrition. Notably, the $40K - $60K income bracket also shows a noteworthy presence among attrited customers with known income categories, comprising 15.000% of attrition cases, signifying a higher attrition rate within this income range.</p>
+
+<div style="text-align: center;">
+```{r}
+# Violin plot for 'Total_Trans_Ct' by 'Card_Category'
+
+ggplot(Credit_card_churn, aes(x = Card_Category, y = Total_Trans_Ct, fill = Card_Category)) +
+  geom_violin(trim = FALSE) +
+  labs(title = "Total Transaction Count by Card Category", x = "Card Category", y = "Total Transaction Count") +
+  scale_fill_brewer(palette = "Set3")  # Change colors here using a new color palette
+
+```
+</div>
+<div style="display: inline-block; text-align: left; padding-left: 340px;">
+<b>Figure 4.</b></div>
+
+<p>Figure 4 presents a violin plot showcasing the distribution of total transaction counts categorized by different card types: Blue, Gold, Platinum, and Silver. This type of plot amalgamates the attributes of a box plot with a kernel density plot, allowing for a comprehensive visualization of the distribution's shape and spread of transaction counts among cardholders within each category. Analyzing the violins across card categories reveals distinct shapes and patterns. The Blue card category exhibits a wide base, indicative of a high frequency of cardholders with lower transaction counts. As the transaction count increases, the width tapers off, suggesting a decreasing frequency of cardholders with higher transaction counts. This wide distribution with a diminishing frequency portrays a broad range of transaction counts among Blue cardholders. In contrast, the Gold card category displays a more uniform distribution with a less pronounced peak, signifying a relatively even spread of transaction counts across its cardholders. This uniformity implies a more consistent distribution of transaction counts among Gold cardholders compared to the varied spectrum observed in the Blue card category. The Platinum card category appears narrower in shape, indicating a lower frequency of cardholders with diverse transaction counts. This narrower distribution suggests a concentration of cardholders with more consistent transaction counts, potentially indicative of a specific spending pattern or a limited range of transaction behaviors within this category. Similarly, the Silver card category exhibits a wide distribution akin to the Blue card category, albeit with fewer extreme values. The less elongated shape of the violin implies a slightly reduced variation in transaction counts among Silver cardholders compared to Blue cardholders, indicating a distribution with fewer outliers.
+
+</p>
+
+<div style="text-align: center;">
+```{r}
+
+library(GGally)
+numerical_cols <- c("Customer_Age", "Months_on_book", "Credit_Limit", "Total_Trans_Amt")
+data_numeric <- Credit_card_churn[numerical_cols]
+
+ggpairs(data_numeric)
+```
+</div>
+<div style="display: inline-block; text-align: left; padding-left: 350px;">
+<b>Figure 5.</b></div>
+
+<p>Figure 5 presents a matrix of scatter plots, histograms, and correlation coefficients, providing a comprehensive visual representation of the relationships between multiple variables within a dataset. This visualization, often known as a pairs plot or a scatterplot matrix, offers valuable insights into the pairwise connections and linear correlations among various variables. The diagonal plots in the matrix display histograms representing the distribution of individual variables. For instance, the histogram labeled "Customer_Age" showcases the distribution of customer ages in the dataset, while other histograms along the diagonal illustrate the distributions of "Months_on_book," "Credit_Limit," and "Total_Trans_Amt." The correlation between "Customer_Age" and "Months_on_book" yields a coefficient of 0.789, indicating a strong positive correlation. This suggests that as a customer's age increases, the duration of their account tenure tends to increase as well, with a high level of statistical significance. Regarding "Credit_Limit" and "Total_Trans_Amt," the correlation coefficient of 0.172 suggests a weak positive correlation. This implies that while there's a tendency for higher credit limits to correspond with higher total transaction amounts, the relationship is not notably strong. An interesting observation arises from the correlation between "Customer_Age" and "Total_Trans_Amt," yielding a correlation coefficient of -0.046. Despite being statistically significant, the extremely weak negative correlation implies that while there's a minimal tendency for older customers to have slightly lower total transaction amounts, this relationship might not hold practical significance due to its proximity to zero.</p>
+
+<div style="text-align: center;">
+```{r}
+ggplot(Credit_card_churn, aes(x = Avg_Utilization_Ratio, fill = Income_Category)) +
+  geom_density(alpha = 0.6) +
+  labs(title = "Density Plot of Average Utilization Ratio by Income Category", x = "Average Utilization Ratio", y = "Density") +
+  facet_wrap(~Income_Category, scales = "free")
+
+```
+</div>
+<div style="display: inline-block; text-align: left; padding-left: 320px;">
+<b>Figure 6.</b></div>
+
+<p>Figure 6 illustrates a set of density plots, each depicting the distribution of the average utilization ratio across various income categories. These density plots offer insights into the utilization behavior concerning credit among different income brackets, providing a nuanced understanding of how individuals in distinct income groups manage their available credit. Each density plot corresponds to a specific income category, distinguished by different colors as depicted in the legend. The x-axis represents the average utilization ratio, a financial metric indicating the proportion of available credit being utilized by individuals. Meanwhile, the y-axis represents the density of data points, showcasing the concentration of observations at different utilization ratio levels. The "$120K+" category (red) demonstrates a prominent peak at a low utilization ratio, suggesting that individuals with higher incomes tend to maintain a notably lower credit utilization ratio. This peak implies that most high-income earners effectively manage and utilize a smaller proportion of their available credit. Both the "$40K - $60K" (yellow) and "$60K - $80K" (green) income categories display peaks at lower utilization ratios as well. However, these categories exhibit wider distributions, indicating more variability in credit utilization within these income brackets. Similarly, the "$80K - $120K" category (cyan) mirrors the trend of having a majority of individuals maintaining a low utilization ratio, aligning with prudent credit utilization practices. In contrast, the "Less than $40K" category (blue) shows a wider distribution, signifying a more diverse range of utilization ratios among lower-income earners. This suggests a broader spectrum of credit usage patterns within this income group. The "Unknown" income category (pink) depicts a substantial number of individuals spread across various utilization ratios, with a peak observed at a lower ratio. This suggests a diverse range of credit utilization behaviors within this category, with a considerable portion exhibiting lower credit utilization.</p>
+
+```{r}
+numerical_cols <- c("Customer_Age", "Months_on_book", "Credit_Limit", "Total_Trans_Amt")
+data_numeric <- Credit_card_churn[numerical_cols]
+
+correlation_matrix <- cor(data_numeric)
+library(ggplot2)
+```
+
+<div style="text-align: center;">
+
+```{r}                                               
+correlation_matrix <- cor(data_numeric)
+
+# Load required libraries
+library(reshape2)
+library(ggplot2)
+
+# Reshape the correlation matrix for visualization
+melted_correlation <- reshape2::melt(correlation_matrix)
+
+# Create correlation heatmap
+ggplot(data = melted_correlation, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Correlation Heatmap of Numeric Variables", x = "", y = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+</div>
+<div style="display: inline-block; text-align: left; padding-left: 310px;">
+<b>Figure 7.</b></div>
+
+<p>The visual representation uploaded, denoted as Figure 7, depicts a correlation heatmap, a valuable tool used to illustrate the correlation coefficients among various numeric variables within a dataset. Each cell in the heatmap displays the strength and direction of the linear relationship between two variables, showcasing correlations ranging from -1 to 1. A correlation of 1 implies a perfect positive correlation, 0 indicates no correlation, and -1 indicates a perfect negative correlation [1]. This visualization provides insights into how these variables relate to one another, aiding in identifying potential patterns or associations within the data. In this heatmap, the diagonal line from the top left to the bottom right represents the correlation of each variable with itself, which will always be 1 as it indicates a perfect positive correlation. Notably, the square where "Months_on_book" intersects with "Customer_Age" stands out with a darker shade of blue, suggesting a relatively robust positive correlation between these two variables. The intensity of this color signifies a stronger relationship between a customer's age and the duration of their account tenure. Other squares within the heatmap display the correlations between different pairs of variables, such as "Credit_Limit" and "Total_Trans_Amt," "Credit_Limit" and "Months_on_book," among others. The absence of lighter shades or different colors within the heatmap implies a lack of strong negative correlations between these variables. Lighter shades would typically indicate weaker correlations, but in this visualization, the predominant use of darker shades suggests stronger positive correlations among the depicted numeric variables. While the exact correlation coefficient values are not explicitly visible in the heatmap, the intensity of the blue shades offers a qualitative estimation of the strength of the relationships between variables. For instance, the relatively darker shade associated with "Customer_Age" and "Months_on_book" implies a higher positive correlation compared to other pairs, while lighter shades, like those seen in associations such as "Credit_Limit" and "Total_Trans_Amt," might suggest weaker positive correlations between those variables </p>
+
+
+```{r}
+#Converting all features to categorical data
+Credit_card_churn[sapply(Credit_card_churn, is.character)]<-
+lapply(Credit_card_churn[sapply(Credit_card_churn, is.character)], as.factor)
+```
+
+```{r}
+str(Credit_card_churn)
+summary(Credit_card_churn)
+```
+
+
+```{r}
+# Assuming you have loaded the necessary data as 'Credit_card_churn'
+
+# Convert all features to categorical data
+Credit_card_churn[sapply(Credit_card_churn, is.character)] <- lapply(Credit_card_churn[sapply(Credit_card_churn, is.character)], as.factor)
+
+# Set seed for reproducibility
+set.seed(186)
+
+# Create indices for splitting
+indices <- sample(1:nrow(Credit_card_churn), 0.8 * nrow(Credit_card_churn))
+
+# Split the dataset into training and testing sets
+training_reg <- Credit_card_churn[indices, ]
+testing_reg <- Credit_card_churn[-indices, ]
+
+# Display dimensions of training and testing sets
+dim(training_reg)
+dim(testing_reg)
+
+```
+
+<h2> Random Forest </h2>
+
+
+```{r, results='markup'}
+# Load necessary libraries
+library(randomForest)
+library(caret)
+
+# Train the Random Forest model
+set.seed(186)  # Set seed for reproducibility
+random_forest <- randomForest(Attrition_Flag ~ ., ntree = 500, data = training_reg)
+
+# Print summary of the random forest model
+print(summary(random_forest))
+print(random_forest)
+
+# Make predictions on the testing set
+rf_pred <- predict(random_forest, testing_reg)
+
+# Calculate confusion matrix
+conf_matrix_rf <- confusionMatrix(rf_pred, testing_reg$Attrition_Flag)
+
+# Extract overall accuracy from confusion matrix
+ran_accuracy <- conf_matrix_rf$overall["Accuracy"]
+cat("Random Forest Accuracy:", ran_accuracy, "\n")
+
+# Print precision, recall, F1-score, TP, FP, FN, TN
+precision <- conf_matrix_rf$byClass["Precision"]
+recall <- conf_matrix_rf$byClass["Recall"]
+f1_score <- conf_matrix_rf$byClass["F1"]
+tp <- conf_matrix_rf$table[2, 2]
+fp <- conf_matrix_rf$table[1, 2]
+fn <- conf_matrix_rf$table[2, 1]
+tn <- conf_matrix_rf$table[1, 1]
+
+cat("Precision:", precision, "\n")
+cat("Recall:", recall, "\n")
+cat("F1 Score:", f1_score, "\n")
+cat("True Positives:", tp, "\n")
+cat("False Positives:", fp, "\n")
+cat("False Negatives:", fn, "\n")
+cat("True Negatives:", tn, "\n")
+
+
+```
+
+<p>The Random Forest model was constructed using the randomForest() function, where the formula Attrition_Flag ~ . suggests that the model aimed to predict the "Attrition_Flag" variable using all other available features in the dataset. The dataset used for training this model is referred to as training_reg. The Random Forest model was configured to include 500 trees in the forest, with a selection of 4 variables tried at each split in the trees. The out-of-bag (OOB) estimate of the error rate, which serves as an internal validation measure, is reported at 3.67%. This error rate signifies the expected accuracy of the model on unseen data based on samples not included in the bootstrap aggregation (bagging) process. The confusion matrix generated by the model illustrates the performance metrics, showcasing the classification results for the predicted versus actual classes: "Attrited Customer" and "Existing Customer." Within the confusion matrix, the model correctly predicted 1104 instances of "Attrited Customer" out of 1322 actual cases, and 6700 instances of "Existing Customer" out of 6779 actual cases. This performance resulted in a class error rate of 0.1649 for "Attrited Customer" and 0.0117 for "Existing Customer." The overall accuracy of the Random Forest model stands at 96.8% (0.968). Additionally, the model evaluation metrics include precision, recall, F1 score, true positives, false positives, false negatives, and true negatives. Precision, which measures the accuracy of positive predictions, is reported at 0.944, indicating a high level of correctly predicted "Attrited Customer" instances among the total predicted positives. Recall, also known as sensitivity, quantifies the model's ability to capture all positive instances, and it stands at 0.836. The F1 score, which harmonizes precision and recall, is computed at 0.887, signifying a balanced performance between precision and recall. The model's ability to correctly identify "Attrited Customers" resulted in 1706 true positives and 15 false positives. On the other hand, it misclassified 50 cases of "Attrited Customers" as "Existing Customers" (false negatives) and accurately identified 2559 "Existing Customers" (true negatives). Overall, the Random Forest model exhibited strong predictive performance, achieving high accuracy, precision, recall, and F1 score in classifying customers into "Attrited" or "Existing" categories based on the given dataset.</p>
+
+<h2>Logistic Regression Model</h2>
+<div style="text-align: center;">
+
+```{r}
+# Load necessary libraries
+library(pROC)
+library(caret)
+
+# Fit Logistic Regression Model
+LogModel <- glm(Attrition_Flag ~ ., family = "binomial", data = training_reg)
+print(summary(LogModel))
+anova(LogModel, test = "Chisq")
+
+# Make predictions on the testing set
+log_reg <- predict(LogModel, testing_reg[-1], type = "response")
+threshold <- 0.7  # Adjust the threshold as needed
+y_pred <- ifelse(log_reg > threshold, 2, 1)
+y_pred <- as.numeric(y_pred)
+target <- as.numeric(testing_reg$Attrition_Flag)
+
+# Confusion Matrix and Accuracy
+conf_matrix <- confusionMatrix(table(y_pred, target))
+log_accuracy <- conf_matrix$overall["Accuracy"]
+cat("Accuracy:", log_accuracy, "\n")
+
+# Print confusion matrix
+cat("Confusion Matrix:\n")
+print(conf_matrix$table)
+
+# Calculate TP, TN, FP, FN
+TP <- conf_matrix$table[2, 2]
+TN <- conf_matrix$table[1, 1]
+FP <- conf_matrix$table[1, 2]
+FN <- conf_matrix$table[2, 1]
+
+cat("\nTrue Positives (TP):", TP, "\n")
+cat("True Negatives (TN):", TN, "\n")
+cat("False Positives (FP):", FP, "\n")
+cat("False Negatives (FN):", FN, "\n")
+
+# Calculate Precision, Recall, and F1 Score
+precision <- TP / (TP + FP)
+recall <- TP / (TP + FN)
+f1_score <- 2 * (precision * recall) / (precision + recall)
+
+cat("\nPrecision:", precision, "\n")
+cat("Recall (Sensitivity):", recall, "\n")
+cat("F1 Score:", f1_score, "\n")
+
+# ROC Curve and AUC
+roc_curve <- roc(target, log_reg)
+auc_value <- auc(roc_curve)
+
+# Plot ROC Curve
+plot(roc_curve, main = "ROC Curve", col = "blue", lwd = 2)
+abline(a = 0, b = 1, lty = 2, col = "red")  # Diagonal line for reference
+
+# Display AUC value
+cat("AUC:", auc_value, "\n")
+
+# Calculate accuracy from confusion matrix
+accuracy_from_conf_matrix <- sum(diag(conf_matrix$table)) / sum(conf_matrix$table)
+cat("Accuracy (calculated from Confusion Matrix):", accuracy_from_conf_matrix, "\n")
+
+
+```
+
+</div>
+<div style="display: inline-block; text-align: left; padding-left: 400px;">
+<b>Figure 8.</b></div>
+
+<p>The logistic regression model developed in this analysis aimed to predict customer "Attrition_Flag" based on a diverse set of customer-related features. This comprehensive examination sought to understand how these attributes influence the probability of customers churning or staying with the company. The evaluation of the model began with an assessment of the Deviance Residuals, revealing a range from -3.508 to 3.074. Although some predictions deviated substantially from the actual values, the model generally captured a significant portion of the variation within the dataset. Coefficients offered valuable insights into the relationship between predictor variables and the likelihood of attrition. Notably, certain variables emerged as statistically significant factors impacting the probability of churn. "Gender," "Dependent_count," "Income_Category," "Total_Relationship_Count," "Months_Inactive_12_mon," "Contacts_Count_12_mon," "Total_Revolving_Bal," "Total_Amt_Chng_Q4_Q1," "Total_Trans_Amt," "Total_Trans_Ct," and "Total_Ct_Chng_Q4_Q1" demonstrated notable influence on predicting customer attrition. The Analysis of Deviance Table illustrated the impact of sequentially adding terms to the model, showcasing how certain variables substantially reduced the deviance and contributed significantly to explaining the variability in the response variable. The model's predictive performance was assessed through various metrics. With an accuracy of 89.3%, calculated from the Confusion Matrix, the model correctly classified 1568 instances of true positives and 242 true negatives. However, it misclassified 153 instances as false positives and 63 instances as false negatives. The model's precision was 91.1%, indicating the proportion of correctly predicted positive cases among all predicted positive cases, while the recall (sensitivity) was at a high of 96.1%, reflecting the model's capability to identify actual positives. The F1 score, a harmonic mean of precision and recall, was 93.6%, emphasizing the model's balance between precision and recall. The logistic regression model displayed promising characteristics, as indicated by an Area Under the Curve (AUC) value of 0.927. This metric signifies the model's ability to discriminate between customers likely to churn and those likely to stay, suggesting its reliability and effectiveness in predictive performance.
+</p>
+
+```{r}
+
+
+# Decision Tree for Regular Data
+decision_tree <- ctree(Attrition_Flag ~ ., data = training_reg)
+print(decision_tree)
+
+# Predict using the decision tree model on the testing set
+dt_pred <- predict(decision_tree, testing_reg)
+
+# Calculate confusion matrix
+conf_matrix_dt <- confusionMatrix(dt_pred, testing_reg$Attrition_Flag)
+
+# Extracting TP, TN, FP, FN from confusion matrix
+TP <- conf_matrix_dt$table[2, 2]  # True Positives
+TN <- conf_matrix_dt$table[1, 1]  # True Negatives
+FP <- conf_matrix_dt$table[1, 2]  # False Positives
+FN <- conf_matrix_dt$table[2, 1]  # False Negatives
+
+# Print TP, TN, FP, FN
+cat("True Positives (TP):", TP, "\n")
+cat("True Negatives (TN):", TN, "\n")
+cat("False Positives (FP):", FP, "\n")
+cat("False Negatives (FN):", FN, "\n")
+
+# Calculate and print Precision, Recall, and F1 Score
+precision <- TP / (TP + FP)
+recall <- TP / (TP + FN)
+f1_score <- 2 * (precision * recall) / (precision + recall)
+
+cat("Precision:", precision, "\n")
+cat("Recall (Sensitivity):", recall, "\n")
+cat("F1 Score:", f1_score, "\n")
+
+# Calculate and print accuracy
+dec_accuracy <- sum(diag(conf_matrix_dt$table)) / sum(conf_matrix_dt$table)
+cat("Decision Tree Accuracy:", dec_accuracy, "\n")
+
+```
+<p>The conditional inference tree generated is designed to predict customer "Attrition_Flag" based on multiple input variables related to customers' demographics, behavior, and financial attributes. This tree-based model effectively separates the dataset into different nodes or segments based on the importance and relationships among these variables. The tree's structure is complex, branching into various decision points using a set of conditions. It consists of 61 terminal nodes, each representing a specific subset of customers characterized by distinct combinations of input features. The initial node of the tree identifies "Total_Trans_Ct" as the primary splitting criterion. Customers with a "Total_Trans_Ct" less than or equal to 54 are directed down a path that considers variables like "Total_Revolving_Bal," "Total_Ct_Chng_Q4_Q1," "Total_Relationship_Count," "Total_Trans_Amt," "Customer_Age," and others to arrive at smaller segments of customers with different churn probabilities. Similarly, for customers with a "Total_Trans_Ct" greater than 54, the tree branches into different segments based on "Total_Amt_Chng_Q4_Q1," "Avg_Utilization_Ratio," "Contacts_Count_12_mon," "Credit_Limit," "Income_Category," and other features. The tree summary also provides a performance evaluation of the model. It indicates that the decision tree model achieved an accuracy of 94.8% in predicting customer churn, with a precision of 97.4% and a recall (sensitivity) of 96.5%. This means that among all the instances predicted as churn, 97.4% were correctly classified, while the model accurately identified 96.5% of actual churn cases. The F1 Score, a measure that considers both precision and recall, is at a high of 96.9%, demonstrating the model's robustness in identifying customers at risk of attrition. In essence, this decision tree model offers a structured and interpretable way to understand the factors influencing customer attrition. It efficiently segments customers based on key features, providing valuable insights for targeted retention strategies and indicating the most critical attributes contributing to the likelihood of churn.</p>
+
+<div style="text-align: center;">
+
+```{r}
+# Create a data frame for comparison
+comparison_data <- data.frame(
+  Algorithm = c("Random Forest", "Decision Tree", "Logistic Regression"),
+  Percentage = c(ran_accuracy * 100, dec_accuracy * 100, accuracy_from_conf_matrix * 100)
+)
+
+# Load necessary library
+library(ggplot2)
+
+# Define pretty colors from the RColorBrewer package
+library(RColorBrewer)
+my_colors <- c("#FF6F61", "#6B5B95", "#88B04B")    # Using Set2 palette with 3 colors
+
+# Plot the comparison using ggplot with pretty colors and adjusted width
+ggplot(data = comparison_data, aes(x = Algorithm, y = Percentage, fill = Algorithm)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.6) +
+  scale_fill_manual(values = my_colors) +  # Use pretty colors
+  geom_text(aes(label = sprintf("%.2f%%", Percentage)), vjust = -0.2, size = 5, position = position_dodge(0.7)) +
+  ylim(0, max(comparison_data$Percentage) * 1.1) +
+  labs(title = "Comparison of Model Accuracy",
+       y = "Accuracy (%)",
+       x = "Algorithm")
+
+
+
+```
+
+</div>
+<div style="display: inline-block; text-align: left; padding-left: 320px;">
+<b>Figure 9.</b></div>
+
+<p>The provided bar chart presents a comparative analysis of three distinct machine learning models: Decision Tree, Logistic Regression, and Random Forest. Each bar on the chart signifies the accuracy percentage achieved by a specific algorithm. The y-axis illustrates the accuracy percentages of the models, while the x-axis categorizes the types of algorithms utilized. The height of each bar corresponds to the accuracy percentage, explicitly labeled atop each bar. The colors red, purple, and green are indicative of the Decision Tree, Logistic Regression, and Random Forest models, respectively. According to the data showcased on the chart, the Decision Tree model achieves an accuracy of 94.77%. This model, known for its interpretability, partitions data based on different attributes to formulate decision rules for predicting outcomes. Logistic Regression, with an accuracy of 89.34%, estimates the probability of an instance belonging to a specific class, assuming a linear relationship between input features and the target variable. Meanwhile, the Random Forest model demonstrates the highest accuracy of 96.79%. Random Forest, an ensemble learning technique that amalgamates multiple decision trees, provides predictions by aggregating outcomes from several individual trees. Upon scrutinizing the results, it is evident that, in this specific scenario, the Random Forest model outperforms the other two models concerning accuracy. This superior performance could be attributed to the Random Forest's ability to capture intricate relationships within the data, handle outliers adeptly, and mitigate overfitting by utilizing an ensemble of decision trees. Accuracy, a pivotal metric for evaluating classification models, signifies the proportion of correct predictions out of the total predictions made by the model. Conclusively, based on the accuracy percentages depicted in the chart, the Random Forest model emerges as the most accurate among the three models for predicting outcomes in this particular context. Nonetheless, comprehensive assessment and consideration of other metrics might be necessary to ascertain the model's suitability for addressing the specific requirements of the given problem statement.</p>
+
+<h1> Conclusion </h1>
+
+<p>In conclusion, this research explored and compared the efficacy of three distinct machine learning models: Decision Tree, Logistic Regression, and Random Forest, in predicting card churn attrition within the banking sector. These models were evaluated based on their accuracy metrics obtained from a comprehensive dataset. The Decision Tree model exhibited a commendable accuracy of 94.77%, showcasing its capability to form intuitive decision rules based on feature attributes. Logistic Regression, with an accuracy of 89.34%, performed reasonably well by estimating the probability of churn based on linear relationships between predictors and the target variable. However, the Random Forest model surpassed the others with the highest accuracy of 96.79%, indicating its robustness in capturing intricate data patterns through an ensemble approach. The outcomes gleaned from this study suggest that, in this specific banking context, the Random Forest model emerges as the most effective predictor of card churn attrition. Nevertheless, while accuracy serves as a primary metric for model evaluation, further analysis encompassing other performance metrics, such as precision, recall, and F1 score, could provide a more comprehensive understanding of each model's predictive capability. Furthermore, considering the business implications and interpretability of models is crucial in real-world applications, where Decision Trees could offer a more explainable approach compared to ensemble models like Random Forest. Looking ahead, the predictive power of machine learning models, particularly the Random Forest, signifies their potential in aiding banking institutions to proactively identify customers at risk of card churn attrition. Leveraging these models, financial institutions could employ targeted retention strategies, personalized incentives, or tailored customer engagement initiatives aimed at reducing attrition rates and enhancing customer retention. This proactive approach not only helps in mitigating revenue loss associated with churn but also fosters customer loyalty and satisfaction, ultimately contributing to sustained business growth. However, it's important to note that while these models exhibit promising accuracy rates, their performance might vary based on evolving customer behaviors, changing market dynamics, or shifts in banking policies. Continual monitoring, retraining, and refinement of these models are imperative to ensure their adaptability and reliability in a dynamic banking landscape. In summary, the exploration and comparison of these machine learning models shed light on their potential utility in predicting card churn attrition within the banking sector. The Random Forest model, with its superior accuracy, emerges as a formidable tool for proactive churn prediction, providing financial institutions with actionable insights to curtail attrition rates and foster long-term customer relationships. However, deploying these models in practice warrants a balanced consideration of not only predictive performance but also interpretability and adaptability in real-world banking scenarios.</p>
+
+
+
+<h1>References</h1>
+
+1. Jagadeesan, A.P. (2020). Bank customer retention prediction and customer ranking based on deep neural networks. International Journal of Scientific Development Research, 5, 444–449.
+
+2. Amuda, K.A., & Adeyemo, A.B. (2019). Customer churn prediction in a financial institution using artificial neural networks. arXiv, arXiv:1912.11346.
+
+3. Kim, S., Shin, K.-S., & Park, K. (2005). An application of support vector machines for customer churn analysis: Credit card case. In Proceedings of the International Conference on Natural Computation (pp. 636–647). Springer.
+
+4. Kumar, D.A., & Ravi, V. (2008). Predicting credit card customer churn in banks using data mining. *International Journal of Data Analysis and Technology Strategies, 1*, 4–28. https://doi.org/10.1504/IJDATS.2008.02002
+
+5. Keramati, A., Ghaneei, H., & Mirmohammadi, S.M. (2016). Developing a prediction model for customer churn from electronic banking services using data mining. Financial Innovation, 2, 10. http://doi.org/10.1186/s40854-016-0029-6
+
+6. Bastan, M., Akbarpour, S., & Ahmadvand, A. (2016). Business dynamics of Iranian commercial banks. In Proceedings of the 34th International Conference of the System Dynamics Society, Delft, The Netherlands.
+
+7. Bastan, M., Bagheri Mazrae, M., Ahmadvand, A. (2016). Dynamics of banking soundness based on CAMELS Rating system. In Proceedings of the 34th International Conference of the System Dynamics Society, Delft, The Netherlands.
+
+8. Iranmanesh, S.H., Hamid, M., Bastan, M., Hamed Shakouri, G., & Nasiri, M.M. (2019). Customer churn prediction using artificial neural network: An analytical CRM application. In Proceedings of the International Conference on Industrial Engineering and Operations Management, Bangkok, Thailand (pp. 23–26).
